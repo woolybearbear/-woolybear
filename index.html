@@ -2230,7 +2230,120 @@
       flex-shrink: 0;
     }
 
+
+    .copy-order-btn {
+      width:100%;padding:16px;background:var(--brand-red);color:#fff;
+      border:none;font-size:14px;letter-spacing:2px;cursor:pointer;
+      font-family:'Noto Sans TC',sans-serif;
+      display:flex;align-items:center;justify-content:center;gap:10px;
+      transition:background 0.2s;margin-bottom:10px;
+    }
+    .copy-order-btn:hover{background:var(--brand-red-hover,#3A1215);}
+    .copy-order-btn.copied{background:#27ae60;}
+    .line-jump-btn {
+      width:100%;padding:14px;background:#06C755;color:#fff;
+      border:none;font-size:13px;letter-spacing:2px;cursor:pointer;
+      font-family:'Noto Sans TC',sans-serif;text-decoration:none;
+      display:flex;align-items:center;justify-content:center;gap:10px;
+      transition:background 0.2s;margin-bottom:10px;
+    }
+    .line-jump-btn:hover{background:#05b04c;}
+    .order-msg-preview {
+      background:#fff;border:1px solid var(--border-color);
+      padding:12px 14px;font-size:11px;color:#555;
+      line-height:1.8;white-space:pre-wrap;
+      max-height:150px;overflow-y:auto;margin:12px 0;
+      font-family:monospace;
+    }
+    .success-step {
+      display:flex;align-items:flex-start;gap:10px;
+      font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:8px;
+    }
+    .success-step-num {
+      width:20px;height:20px;border-radius:50%;
+      background:var(--brand-red);color:#fff;font-size:11px;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    }
+
+
+    /* ── 門市查詢 ── */
+    .store-search-wrap {
+      margin-top: 10px; border: 1px solid var(--border-color);
+      background: #fff;
+    }
+    .store-search-head {
+      display: flex; gap: 8px; padding: 12px;
+      border-bottom: 1px solid var(--border-color);
+      background: var(--brand-cream, #FAF7F2);
+    }
+    .store-search-input {
+      flex: 1; padding: 9px 12px;
+      border: 1px solid var(--border-color);
+      font-size: 13px; font-family: 'Noto Sans TC', sans-serif;
+      outline: none; background: #fff;
+    }
+    .store-search-input:focus { border-color: var(--brand-red); }
+    .store-search-btn {
+      padding: 9px 16px; background: var(--brand-red); color: #fff;
+      border: none; font-size: 12px; letter-spacing: 1px;
+      cursor: pointer; font-family: 'Noto Sans TC', sans-serif;
+      white-space: nowrap; transition: background 0.2s;
+    }
+    .store-search-btn:hover { background: var(--brand-red-hover, #3A1215); }
+    .store-results {
+      max-height: 240px; overflow-y: auto;
+    }
+    .store-result-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border-bottom: 1px solid #f5f5f5;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .store-result-item:hover { background: var(--brand-cream, #FAF7F2); }
+    .store-result-item:last-child { border-bottom: none; }
+    .store-result-code {
+      font-family: monospace; font-size: 13px; font-weight: 600;
+      color: var(--brand-red); width: 54px; flex-shrink: 0;
+    }
+    .store-result-info { flex: 1; min-width: 0; }
+    .store-result-name { font-size: 13px; font-weight: 500; color: var(--text-main); }
+    .store-result-addr { font-size: 11px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .store-select-btn {
+      padding: 5px 12px; background: var(--brand-red); color: #fff;
+      border: none; font-size: 11px; letter-spacing: 1px;
+      cursor: pointer; font-family: 'Noto Sans TC', sans-serif;
+      flex-shrink: 0; white-space: nowrap;
+    }
+    .store-empty { padding: 20px; text-align: center; font-size: 12px; color: var(--text-muted); letter-spacing: 1px; }
+    .store-selected-badge {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px; background: rgba(83,27,31,0.05);
+      border: 1px solid var(--brand-red); margin-top: 8px; font-size: 12px;
+    }
+    .store-selected-code { font-weight: 700; color: var(--brand-red); font-family: monospace; font-size: 14px; }
+
+
+    .open-map-btn {
+      width: 100%; padding: 14px 16px;
+      background: var(--brand-red); color: #fff;
+      border: none; font-size: 13px; letter-spacing: 1.5px;
+      cursor: pointer; font-family: 'Noto Sans TC', sans-serif;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      transition: background 0.2s;
+    }
+    .open-map-btn:hover { background: var(--brand-red-hover, #3A1215); }
+    .store-selected-badge {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; background: #f0fff4;
+      border: 1px solid #27ae60; font-size: 12px;
+    }
+    .store-selected-code {
+      font-weight: 700; color: var(--brand-red);
+      font-family: monospace; font-size: 15px; flex-shrink: 0;
+    }
+
   </style>
+  <!-- SheetJS for Excel export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
   <input type="hidden" id="_logoSrc" value="logo.jpg">
@@ -3586,11 +3699,8 @@
           <div class="product-desc" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${p.desc}</div>
           ${startPrice?`<div style="font-size:13px;font-weight:500;color:var(--brand-red);margin:10px 0 4px">起 ${startPrice}</div>`:''}
           <div class="product-btn-row" onclick="event.stopPropagation()">
-            <button class="btn-cart" onclick="addToCart('${p.id}')" title="加入購物車" ${isOut?'disabled style="opacity:0.4;cursor:not-allowed"':''}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-            </button>
-            <button class="btn btn-solid btn-order" onclick="openOrderModal('${p.id}')" ${isOut?'disabled style="opacity:0.4;cursor:not-allowed;background:#ccc;border-color:#ccc"':''}>
-              ${isOut?'已售完':'立即訂購'}
+            <button class="btn btn-solid btn-full" onclick="addToCart('${p.id}')" ${isOut?'disabled style="opacity:0.4;cursor:not-allowed;background:#ccc;border-color:#ccc"':''}>
+              ${isOut?'已售完':'加入購物車'}
             </button>
           </div>
           <div style="text-align:center;margin-top:8px">
@@ -4212,14 +4322,12 @@
       if(id==='members')          renderMemberAdminPanel();
       if(id==='orders') {
         renderOrderTable();
-        // Set default date range: last 30 days
-        const today = new Date();
-        const from  = new Date(today); from.setDate(from.getDate()-30);
+        // 預設清空日期篩選，顯示全部待出貨訂單
         const toEl   = document.getElementById('ship-date-to');
         const fromEl = document.getElementById('ship-date-from');
-        if(toEl && !toEl.value)   toEl.value   = today.toISOString().split('T')[0];
-        if(fromEl && !fromEl.value) fromEl.value = from.toISOString().split('T')[0];
-        _selectedShipments = new Set();
+        if(toEl)   toEl.value   = '';
+        if(fromEl) fromEl.value = '';
+        if(typeof _selectedShipments !== 'undefined') _selectedShipments = new Set();
         renderShipmentList();
       }
       if(id==='shop-settings')    loadShopSettings();
@@ -4712,6 +4820,82 @@
     }
 
 
+
+    // ══════════════════════════════════════════════════════════════
+    // 7-11 官方電子地圖選店
+    // ══════════════════════════════════════════════════════════════
+    var _711MapTarget = null;
+    var _711MapTimer  = null;
+
+    function open711Map(target) {
+      _711MapTarget = target;
+
+      // 清除上次殘留
+      localStorage.removeItem('_711_store');
+
+      // 開啟官方電子地圖（全螢幕 popup）
+      var w = Math.min(window.screen.width, 900);
+      var h = Math.min(window.screen.height, 700);
+      var left = (window.screen.width - w) / 2;
+      var top  = (window.screen.height - h) / 2;
+      var mapUrl = 'https://emap.pcsc.com.tw/emap.aspx';
+      var popup = window.open(mapUrl, '_711map',
+        'width='+w+',height='+h+',top='+top+',left='+left+',resizable=yes,scrollbars=yes'
+      );
+
+      // 輪詢 localStorage 等待回傳（每 500ms 檢查一次，最多 3 分鐘）
+      var tries = 0;
+      _711MapTimer = setInterval(function() {
+        tries++;
+        var data = localStorage.getItem('_711_store');
+        if(data) {
+          try {
+            var store = JSON.parse(data);
+            _fillStoreResult(target, store.id, store.name, store.addr);
+            localStorage.removeItem('_711_store');
+          } catch(e) {}
+          clearInterval(_711MapTimer);
+          if(popup && !popup.closed) popup.close();
+          return;
+        }
+        if(tries > 360) { // 3 分鐘後放棄
+          clearInterval(_711MapTimer);
+        }
+      }, 500);
+
+      // 提示客人操作方式
+      showToast('已開啟 7-11 地圖，請選擇門市後回到此頁面');
+    }
+
+    function _fillStoreResult(target, code, name, addr) {
+      var inputId = target === 'cart' ? 'co-store' : 'o-store';
+      var badgeId = 'store-badge-' + target;
+      var inp = document.getElementById(inputId);
+      var badge = document.getElementById(badgeId);
+      if(inp) inp.value = code;
+      if(badge) {
+        badge.style.display = 'flex';
+        badge.innerHTML =
+          '<div class="store-selected-code">' + code + '</div>' +
+          '<div style="flex:1">' +
+            '<div style="font-weight:500;margin-bottom:2px">' + name + '門市</div>' +
+            '<div style="font-size:11px;color:var(--text-muted)">' + (addr||'') + '</div>' +
+          '</div>' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#27ae60" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
+      }
+      showToast('已選擇：' + name + '門市（' + code + '）');
+    }
+
+    // 客人在電子地圖選完後，地圖頁面無法直接 postMessage 回來
+    // 因此也提供手動輸入店號的 fallback
+    function manualInputStore(target) {
+      var code = prompt('請輸入 7-11 門市店號（6碼數字）：');
+      if(!code) return;
+      code = code.replace(/[^0-9]/g,'').slice(0,6);
+      if(code.length !== 6) { alert('店號必須是 6 碼數字'); return; }
+      _fillStoreResult(target, code, '自填門市', '');
+    }
+
     // ══════════════════════════════════════════════════════════════
     // 訂單系統
     // ══════════════════════════════════════════════════════════════
@@ -4792,8 +4976,23 @@
         <div class="order-section-title">收件資訊</div>
         ${memberFields}
         <div class="order-field-group">
-          <label class="order-field-label">超商取貨門市（請填寫最近的 7-11 門市名稱或地址）<span class="req">*</span></label>
-          <input class="order-field-input" id="o-store" type="text" placeholder="例：台北市信義區松高路12號（信義松高門市）">
+          <label class="order-field-label">7-11 取件門市<span class="req">*</span></label>
+          <!-- Step 1: 查詢按鈕 -->
+          <a href="https://emap.pcsc.com.tw/" target="_blank" rel="noopener"
+            style="display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;background:var(--brand-red);color:#fff;text-decoration:none;font-size:12px;letter-spacing:1.5px;font-family:'Noto Sans TC',sans-serif;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Step 1 &nbsp;查詢 7-11 門市店號（開新分頁）
+          </a>
+          <!-- Step 2: 填入欄位 -->
+          <div style="margin-top:10px;border:2px solid var(--brand-red);padding:12px 14px;background:#fff">
+            <div style="font-size:10px;letter-spacing:2px;color:var(--brand-red);margin-bottom:8px;font-weight:500">
+              Step 2 &nbsp;將查到的 6 碼店號填入下方 ↓
+            </div>
+            <input class="order-field-input" id="o-store" type="text"
+              placeholder="例：122186　（門市頁面上的6碼數字）"
+              maxlength="6" style="border:1px solid #ddd;font-size:14px;letter-spacing:3px"
+              oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,6)">
+          </div>
         </div>
         <div class="order-field-group">
           <label class="order-field-label">備註（選填）</label>
@@ -4848,7 +5047,7 @@
 
       if(!name)  { errEl.textContent='請填寫收件人姓名'; errEl.style.display='block'; return; }
       if(!phone || !/^09\d{8}$/.test(phone)) { errEl.textContent='請輸入正確手機號碼（09xxxxxxxx）'; errEl.style.display='block'; return; }
-      if(!store) { errEl.textContent='請填寫超商取貨門市'; errEl.style.display='block'; return; }
+      if(!store || !/^[0-9]{6}$/.test(store)) { errEl.textContent='請填寫正確的 7-11 門市店號（6碼數字）'; errEl.style.display='block'; return; }
 
       const p        = getProds().find(x => x.id === _orderProductId);
       const variant  = _orderVariant || (p?.prices?.[0]?.name || '');
@@ -4906,27 +5105,7 @@
       }
 
       // Show success
-      const _successMsg = buildCustomerOrderMsg(order);
-      document.getElementById('order-modal-body').innerHTML = `
-        <div class="order-success-wrap">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--brand-red)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>
-          <div class="order-success-num">${orderNum}</div>
-          <p class="order-success-msg">訂單已送出！</p>
-          <div style="background:#F0FFF4;border:1px solid #27ae60;padding:14px 16px;margin:16px 0;text-align:left">
-            <p style="font-size:11px;color:#27ae60;letter-spacing:1px;margin-bottom:10px">請依序點擊下方兩個步驟，將訂單傳送給嗚粒貝爾</p>
-            <div style="white-space:pre-wrap;font-size:11px;color:#555;line-height:1.8;max-height:140px;overflow-y:auto;background:#fff;padding:10px;border:1px solid #d5f0de">${_successMsg.replace(/</g,'&lt;')}</div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:10px;width:100%;margin-top:4px">
-            <button class="line-copy-btn" style="width:100%;justify-content:center;margin-left:0;padding:12px;font-size:13px;background:var(--brand-cream,#FAF7F2);border:1px solid var(--brand-red);color:var(--brand-red)" onclick="copyToClipboard(${JSON.stringify(_successMsg)});showToast('訂單已複製！請接著點下方按鈕開啟 LINE 傳送')">
-              <strong>Step 1 &nbsp;複製訂單資訊</strong>
-            </button>
-            <button class="line-send-btn" style="width:100%;justify-content:center" onclick="sendOrderToLine(${JSON.stringify(_successMsg)})">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.105.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
-              Step 2 &nbsp;開啟 LINE 貼上傳送
-            </button>
-          </div>
-          <button class="btn btn-outline" onclick="closeOrderModal()" style="margin-top:16px;width:100%;font-size:11px;color:var(--text-muted);border-color:#ddd">關閉</button>
-        </div>`;
+      document.getElementById('order-modal-body').innerHTML = buildSuccessHTML(order, 'single');
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -5071,7 +5250,7 @@
 
       if(!orders.length) {
         list.innerHTML='';
-        if(empty){ empty.textContent=(from||to)?'此日期範圍內沒有待出貨訂單':'目前沒有待出貨的訂單'; empty.style.display='block'; }
+        if(empty){ empty.textContent=(from||to)?'此日期範圍內沒有待出貨訂單':'目前沒有狀態為「待出貨」的訂單'; empty.style.display='block'; }
         _selectedShipments.clear(); updateShipmentCount(); return;
       }
       if(empty) empty.style.display='none';
@@ -5139,32 +5318,81 @@
 
     function exportShipments() {
       if(!_selectedShipments.size){ showToast('請先勾選要匯出的訂單'); return; }
-      const allOrders=getOrders();
-      const selected=[..._selectedShipments].map(id=>allOrders.find(o=>o.id===id)).filter(Boolean);
+      const allOrders = getOrders();
+      const selected  = [..._selectedShipments].map(id => allOrders.find(o => o.id === id)).filter(Boolean);
       if(!selected.length){ showToast('找不到選取的訂單'); return; }
+      if(typeof XLSX === 'undefined'){ showToast('Excel 套件載入中，請稍後再試'); return; }
 
-      const headers=['訂單編號','收件人姓名','收件人手機','取件超商','取件門市地址','商品名稱','規格','數量','商品金額','運費','合計','備註'];
-      const rows=selected.map(o=>[
-        o.id, o.name, o.phone, '7-ELEVEN', o.store||'',
-        o.productName, o.variant||'', o.qty,
-        o.subtotal||parseInt((o.price||'0').replace(/[^\d]/g,''))||'',
-        o.shipping??38, o.total||'', o.note||''
-      ]);
+      const wb = XLSX.utils.book_new();
+      const ws = {};
 
-      const bom='\uFEFF';
-      const csv=bom+[headers,...rows].map(row=>
-        row.map(cell=>`"${String(cell===null||cell===undefined?'':cell).replace(/"/g,'""')}"`).join(',')
-      ).join('\n');
+      // ── 前 5 列：賣貨便說明文字（與官方 xlsm 完全一致）──
+      const topRows = [
+        ['賣貨便- 訂單匯入檢核'],
+        ['請在本檔案填入商品資料，一次最多可以上傳 500 筆商品資料'],
+        ['按下 「驗證」 後，會協助您檢查資料格式。'],
+        ['【註：若整筆資料不要，請選取整列後按右鍵刪除】'],
+        []
+      ];
 
-      const date=new Date().toLocaleDateString('zh-TW').replace(/\//g,'-');
-      const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
-      const url=URL.createObjectURL(blob);
-      const a=document.createElement('a');
-      a.href=url; a.download=`嗚粒貝爾_出貨單_${date}_${selected.length}筆.csv`; a.click();
-      URL.revokeObjectURL(url);
-      showToast(`已匯出 ${selected.length} 筆出貨單`);
+      // ── 第 6 列：欄位標題 ──
+      const headers = [
+        '＊取件人姓名','＊取件人手機','＊取件門市','* 溫層',
+        '＊商品','＊訂單金額','＊運費金額',
+        '買家下訂日期','商品備註','其他資訊\n(FB/LINE/IG帳號)','excel驗證結果說明'
+      ];
+
+      // ── 資料列（從第 7 列開始）──
+      const dataRows = selected.map(o => {
+        const name = (o.name||'').replace(/[0-9`~!@#$%^&*()/\\|,.<>'?"();:_+\-=\[\]{}]/g,'').slice(0,10);
+        const phone = (o.phone||'').replace(/[^0-9]/g,'').slice(0,10);
+        const store = (o.store||'').replace(/[^0-9]/g,'').slice(0,6);
+        const product = (o.cartItems
+          ? o.cartItems.map(i=>i.name+(i.variant?'/'+i.variant:'')+(i.qty>1?'*'+i.qty:'')).join('、')
+          : o.productName+(o.variant?'/'+o.variant:'')+(o.qty>1?'*'+o.qty:'')
+        ).slice(0,200);
+        const orderAmt = Math.min(o.subtotal||parseInt((o.price||'0').replace(/[^0-9]/g,''))||0, 20000);
+        const shipAmt  = 38;
+        const d = new Date(o.createdAt);
+        const dateStr = d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate();
+        const note = (o.note||'').slice(0,200);
+        return [name, phone, store, '常溫', product, orderAmt, shipAmt, dateStr, note, '', ''];
+      });
+
+      // ── 合併所有列 ──
+      const allRows = [...topRows, headers, ...dataRows];
+      XLSX.utils.sheet_add_aoa(ws, allRows, {origin:'A1'});
+
+      // ── 欄位格式：A~E、H~K 設文字(@)，F~G 設數字 ──
+      const range = XLSX.utils.decode_range(ws['!ref']||'A1');
+      for(let R = 5; R <= range.e.r; R++) { // 第6列起（0-indexed=5）
+        for(let C = 0; C <= 10; C++) {
+          const addr = XLSX.utils.encode_cell({r:R, c:C});
+          if(!ws[addr]) ws[addr] = {t:'s', v:''};
+          if(C === 5 || C === 6) { // F、G 欄：數字
+            ws[addr].t = 'n';
+            ws[addr].z = '0';
+          } else { // 其他欄：文字
+            ws[addr].t = 's';
+            ws[addr].z = '@';
+            ws[addr].v = String(ws[addr].v ?? '');
+          }
+        }
+      }
+
+      // ── 欄寬 ──
+      ws['!cols'] = [
+        {wch:14},{wch:14},{wch:9},{wch:7},
+        {wch:35},{wch:10},{wch:10},
+        {wch:14},{wch:25},{wch:22},{wch:16}
+      ];
+
+      XLSX.utils.book_append_sheet(wb, ws, '訂單匯入'); // 工作表名稱必須一致
+
+      const date = new Date().toLocaleDateString('zh-TW').replace(/[/]/g,'-');
+      XLSX.writeFile(wb, '嗚粒貝爾_賣貨便匯入_'+date+'_'+selected.length+'筆.xlsx');
+      showToast('已下載 '+selected.length+' 筆，直接上傳至賣貨便匯入工具即可！');
     }
-
     function exportToLemai() { exportShipments(); }
 
 
@@ -5760,7 +5988,7 @@
 
       if(!name)  { errEl.textContent='請填寫收件人姓名'; errEl.style.display='block'; return; }
       if(!phone||!/^09\d{8}$/.test(phone)) { errEl.textContent='請輸入正確手機號碼'; errEl.style.display='block'; return; }
-      if(!store) { errEl.textContent='請填寫超商取貨門市'; errEl.style.display='block'; return; }
+      if(!store || store.length < 4) { errEl.textContent='請填寫 7-11 門市店號'; errEl.style.display='block'; return; }
 
       const calc    = calcCartTotal(_cartCoupon);
       const orderNum= 'WB' + Date.now().toString().slice(-8);
@@ -5813,28 +6041,8 @@
       updateCartBadge();
 
       // Show success in checkout modal
-      const _cartSuccessMsg = buildCustomerOrderMsg(order);
       const body = document.querySelector('.checkout-body');
-      if(body) body.innerHTML = `
-        <div style="text-align:center;padding:32px 24px">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--brand-red)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:var(--brand-red);margin:14px 0 6px;letter-spacing:2px">${orderNum}</div>
-          <p style="font-size:13px;color:var(--text-muted);line-height:1.9;margin-bottom:16px">訂單已送出！</p>
-          <div style="background:#F0FFF4;border:1px solid #27ae60;padding:14px 16px;text-align:left;margin-bottom:16px">
-            <p style="font-size:11px;color:#27ae60;letter-spacing:1px;margin-bottom:10px">請依序點擊下方兩個步驟，將訂單傳送給嗚粒貝爾</p>
-            <div style="white-space:pre-wrap;font-size:11px;color:#555;line-height:1.8;max-height:140px;overflow-y:auto;background:#fff;padding:10px;border:1px solid #d5f0de">${_cartSuccessMsg.replace(/</g,'&lt;')}</div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:10px">
-            <button class="line-copy-btn" style="width:100%;justify-content:center;margin-left:0;padding:12px;font-size:13px;background:var(--brand-cream,#FAF7F2);border:1px solid var(--brand-red);color:var(--brand-red)" onclick="copyToClipboard(${JSON.stringify(_cartSuccessMsg)});showToast('訂單已複製！請接著點下方按鈕開啟 LINE 傳送')">
-              <strong>Step 1 &nbsp;複製訂單資訊</strong>
-            </button>
-            <button class="line-send-btn" style="width:100%;justify-content:center" onclick="sendOrderToLine(${JSON.stringify(_cartSuccessMsg)})">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.105.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
-              Step 2 &nbsp;開啟 LINE 貼上傳送
-            </button>
-          </div>
-          <button class="btn btn-outline" onclick="closeCheckout()" style="margin-top:16px;width:100%;font-size:11px;color:var(--text-muted);border-color:#ddd">關閉</button>
-        </div>`;
+      if(body) body.innerHTML = buildSuccessHTML(order, 'cart');
     }
 
 
@@ -5862,7 +6070,7 @@
         '▌ 收件資訊',
         `收件人：${o.name}`,
         `手機：${o.phone}`,
-        `取件門市：${o.store}`,
+        `取件門市店號：${o.store}`,
         o.note ? `備註：${o.note}` : '',
         '',
         '請確認後回覆，感謝！'
@@ -5944,19 +6152,14 @@
 
       // Buttons
       const cartBtn  = document.getElementById('pd-cart-btn');
-      const orderBtn = document.getElementById('pd-order-btn');
       if(isOut) {
-        cartBtn.disabled  = true; cartBtn.style.opacity  = '0.4'; cartBtn.style.cursor = 'not-allowed';
-        orderBtn.disabled = true; orderBtn.style.opacity = '0.4'; orderBtn.style.cursor = 'not-allowed';
-        orderBtn.textContent = '已售完';
-        cartBtn.onclick  = null;
-        orderBtn.onclick = null;
+        cartBtn.disabled = true; cartBtn.style.opacity = '0.4'; cartBtn.style.cursor = 'not-allowed';
+        cartBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg> 已售完';
+        cartBtn.onclick = null;
       } else {
-        cartBtn.disabled  = false; cartBtn.style.opacity  = '1'; cartBtn.style.cursor = 'pointer';
-        orderBtn.disabled = false; orderBtn.style.opacity = '1'; orderBtn.style.cursor = 'pointer';
-        orderBtn.textContent = '立即訂購';
-        cartBtn.onclick  = () => { addToCart(productId); closeProductDetail(); };
-        orderBtn.onclick = () => { closeProductDetail(); openOrderModal(productId); };
+        cartBtn.disabled = false; cartBtn.style.opacity = '1'; cartBtn.style.cursor = 'pointer';
+        cartBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg> 加入購物車';
+        cartBtn.onclick = () => { addToCart(productId); closeProductDetail(); };
       }
 
       document.getElementById('productDetailOverlay').classList.add('open');
@@ -6065,6 +6268,148 @@
       if(_currentPage === 'about') renderPage('about');
       closeEditModal('socialModal');
       showToast('連結已刪除');
+    }
+
+
+    // ── 下單成功畫面 ──
+    function _doCopyOrder(btn) {
+      var key = btn.getAttribute('data-key');
+      var lineId = btn.getAttribute('data-lineid');
+      var msg = window[key];
+      if (!msg) return;
+      copyToClipboard(msg);
+      btn.classList.add('copied');
+      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>&nbsp;已複製！';
+      var wrap = document.getElementById(lineId);
+      if (wrap) { wrap.style.display = 'block'; wrap.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+    }
+
+    function buildSuccessHTML(order, modalType) {
+      var msg = buildCustomerOrderMsg(order);
+      var key = '_omsg_' + modalType + '_' + Date.now();
+      window[key] = msg;
+      var lineId = 'lw_' + modalType;
+      var closeFunc = modalType === 'cart' ? 'closeCheckout()' : 'closeOrderModal()';
+      var lineUrl = 'https://line.me/R/ti/p/' + SHOP_LINE_ID;
+
+      var copyIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';
+      var lineIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.105.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>';
+      var checkIcon = '<svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="var(--brand-red)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>';
+
+      return '<div style="text-align:center;padding:28px 20px 16px">'
+        + checkIcon
+        + '<div style="font-family:Cormorant Garamond,serif;font-size:28px;font-weight:300;color:var(--brand-red);margin:10px 0 4px;letter-spacing:2px">' + order.id + '</div>'
+        + '<p style="font-size:12px;color:var(--text-muted);margin:0">訂單已建立成功</p>'
+        + '</div>'
+        + '<div style="padding:0 20px 24px">'
+          + '<div style="background:var(--brand-cream,#FAF7F2);border:1px solid var(--border-color);padding:14px 16px;margin-bottom:12px">'
+            + '<div class="success-step"><div class="success-step-num">1</div><div>點下方按鈕<strong style="color:var(--brand-red)">複製訂單資訊</strong></div></div>'
+            + '<div class="success-step"><div class="success-step-num">2</div><div>點<strong style="color:#06C755">前往 LINE 傳送</strong>，貼上傳給嗚粒貝爾</div></div>'
+            + '<div class="success-step"><div class="success-step-num">3</div><div>等嗚粒貝爾確認即完成</div></div>'
+          + '</div>'
+          + '<div class="order-msg-preview">' + msg.replace(/</g, '&lt;') + '</div>'
+          + '<button class="copy-order-btn" data-key="' + key + '" data-lineid="' + lineId + '" onclick="_doCopyOrder(this)">'
+            + copyIcon + '&nbsp;複製訂單資訊'
+          + '</button>'
+          + '<div id="' + lineId + '" style="display:none">'
+            + '<a href="' + lineUrl + '" target="_blank" rel="noopener" class="line-jump-btn">'
+              + lineIcon + '&nbsp;前往嗚粒貝爾 LINE 傳送'
+            + '</a>'
+          + '</div>'
+          + '<button class="btn btn-outline" onclick="' + closeFunc + '" style="width:100%;font-size:12px;color:var(--text-muted);border-color:#ddd;margin-top:4px">關閉</button>'
+        + '</div>';
+    }
+
+
+    // ══════════════════════════════════════════════════════════════
+    // 7-11 門市查詢
+    // ══════════════════════════════════════════════════════════════
+    var _storeSearchTarget = null; // 'single' or 'cart'
+
+    function openStoreSearch(target) {
+      _storeSearchTarget = target;
+      var wrapId = target === 'cart' ? 'store-search-cart' : 'store-search-single';
+      var wrap = document.getElementById(wrapId);
+      if(wrap) wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function doStoreSearch(target) {
+      var inputId = 'store-kw-' + target;
+      var resultId = 'store-results-' + target;
+      var kw = (document.getElementById(inputId)?.value || '').trim();
+      var resultEl = document.getElementById(resultId);
+      if(!resultEl) return;
+      if(!kw) { resultEl.innerHTML = '<div class="store-empty">請輸入門市名稱或地址</div>'; return; }
+      resultEl.innerHTML = '<div class="store-empty">查詢中…</div>';
+
+      // 使用 7-11 官方電子地圖 API
+      var url = 'https://emap.pcsc.com.tw/EMapSDK.aspx?commandid=SearchStore&SearchType=10&StoreName=' + encodeURIComponent(kw) + '&callback=_711cb_' + target;
+
+      window['_711cb_' + target] = function(data) {
+        var stores = [];
+        if(data && data.GeoPosition) {
+          var list = Array.isArray(data.GeoPosition) ? data.GeoPosition : [data.GeoPosition];
+          stores = list.slice(0, 20); // 最多顯示20筆
+        }
+        if(!stores.length) {
+          resultEl.innerHTML = '<div class="store-empty">找不到相符門市，請嘗試其他關鍵字</div>';
+          return;
+        }
+        resultEl.innerHTML = stores.map(s => {
+          var code = s.StoreID || '';
+          var name = s.StoreName || '';
+          var addr = s.Address || '';
+          return '<div class="store-result-item" onclick="_selectStore(\'' + target + '\',\'' + code + '\',\'' + name.replace(/'/g,"\\'") + '\',\'' + addr.replace(/'/g,"\\'") + '\')">' +
+            '<div class="store-result-code">' + code + '</div>' +
+            '<div class="store-result-info">' +
+              '<div class="store-result-name">' + name + '門市</div>' +
+              '<div class="store-result-addr">' + addr + '</div>' +
+            '</div>' +
+            '<button class="store-select-btn">選擇</button>' +
+          '</div>';
+        }).join('');
+      };
+
+      // 加入 JSONP script
+      var old = document.getElementById('_711_script');
+      if(old) old.remove();
+      var s = document.createElement('script');
+      s.id = '_711_script';
+      s.src = url;
+      s.onerror = function() {
+        resultEl.innerHTML = '<div class="store-empty">查詢失敗，請直接輸入 6 碼店號，或至 <a href="https://emap.pcsc.com.tw/" target="_blank" style="color:var(--brand-red)">7-11 門市地圖</a> 查詢</div>';
+      };
+      document.head.appendChild(s);
+
+      // Timeout fallback
+      setTimeout(function() {
+        if(resultEl.innerHTML.includes('查詢中')) {
+          resultEl.innerHTML = '<div class="store-empty">查詢逾時，請直接輸入 6 碼店號，或至 <a href="https://emap.pcsc.com.tw/" target="_blank" style="color:var(--brand-red)">7-11 門市地圖</a> 查詢</div>';
+        }
+      }, 5000);
+    }
+
+    function _selectStore(target, code, name, addr) {
+      // 填入店號
+      var storeInputId = target === 'cart' ? 'co-store' : 'o-store';
+      var storeInput = document.getElementById(storeInputId);
+      if(storeInput) storeInput.value = code;
+
+      // 顯示已選門市
+      var badgeId = 'store-badge-' + target;
+      var badge = document.getElementById(badgeId);
+      if(badge) {
+        badge.style.display = 'flex';
+        badge.innerHTML = '<div class="store-selected-code">' + code + '</div>' +
+          '<div style="flex:1"><div style="font-size:12px;font-weight:500">' + name + '門市</div>' +
+          '<div style="font-size:11px;color:var(--text-muted)">' + addr + '</div></div>' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#27ae60" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
+      }
+
+      // 收起搜尋框
+      var wrapId = 'store-search-' + target;
+      var wrap = document.getElementById(wrapId);
+      if(wrap) wrap.style.display = 'none';
     }
 
   </script>
@@ -6427,8 +6772,23 @@
           </div>
         </div>
         <div class="order-field-group" style="margin-bottom:14px">
-          <label class="order-field-label">超商取貨門市（7-11 門市名稱或地址）<span class="req">*</span></label>
-          <input class="order-field-input" id="co-store" type="text" placeholder="例：信義松高門市 / 台北市信義區松高路12號">
+          <label class="order-field-label">7-11 取件門市<span class="req">*</span></label>
+          <!-- Step 1: 查詢按鈕 -->
+          <a href="https://emap.pcsc.com.tw/" target="_blank" rel="noopener"
+            style="display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;background:var(--brand-red);color:#fff;text-decoration:none;font-size:12px;letter-spacing:1.5px;font-family:'Noto Sans TC',sans-serif;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Step 1 &nbsp;查詢 7-11 門市店號（開新分頁）
+          </a>
+          <!-- Step 2: 填入欄位 -->
+          <div style="margin-top:10px;border:2px solid var(--brand-red);padding:12px 14px;background:#fff">
+            <div style="font-size:10px;letter-spacing:2px;color:var(--brand-red);margin-bottom:8px;font-weight:500">
+              Step 2 &nbsp;將查到的 6 碼店號填入下方 ↓
+            </div>
+            <input class="order-field-input" id="co-store" type="text"
+              placeholder="例：122186　（門市頁面上的6碼數字）"
+              maxlength="6" style="border:1px solid #ddd;font-size:14px;letter-spacing:3px"
+              oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,6)">
+          </div>
         </div>
         <div class="order-field-group" style="margin-bottom:20px">
           <label class="order-field-label">備註（選填）</label>
@@ -6482,10 +6842,10 @@
       </div>
       <!-- Buttons -->
       <div class="product-detail-btns" id="pd-btns">
-        <button class="btn-cart" id="pd-cart-btn" style="width:48px;height:48px;flex-shrink:0">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        <button class="btn btn-solid" id="pd-cart-btn" style="flex:1;padding:12px;display:flex;align-items:center;justify-content:center;gap:8px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+          加入購物車
         </button>
-        <button class="btn btn-solid" id="pd-order-btn" style="flex:1;padding:12px">立即訂購</button>
       </div>
     </div>
   </div>
