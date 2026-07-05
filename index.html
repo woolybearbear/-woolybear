@@ -5021,6 +5021,13 @@
 
     function closeOrderModal() {
       document.getElementById('orderModal').style.display = 'none';
+      // 清空內容，確保下次開啟重新渲染
+      const body = document.getElementById('order-modal-body');
+      if(body) body.innerHTML = '';
+      _orderQty = 1;
+      _orderVariant = '';
+      _orderProductId = null;
+      _appliedCoupon = null;
     }
 
     function selectVariant(btn, name, price) {
@@ -5088,6 +5095,9 @@
       const orders = getOrders();
       orders.unshift(order);
       saveOrders(orders);
+
+      // 扣除庫存
+      deductStock(_orderProductId, _orderQty);
 
       // 集點（依商店設定）
       if(_currentMember && basePrice > 0) {
@@ -5948,6 +5958,12 @@
     function closeCheckout() {
       document.getElementById('checkout-overlay')?.classList.remove('open');
       document.body.style.overflow = '';
+      // 還原結帳頁面，確保下次可以重新填寫
+      const body = document.querySelector('.checkout-body');
+      if(body) body.innerHTML = `
+        <div style="text-align:center;padding:48px 20px;color:var(--text-muted);font-size:13px;letter-spacing:1px">
+          載入中…
+        </div>`;
     }
 
     function renderCheckoutSummary() {
@@ -5997,6 +6013,9 @@
       const orders = getOrders();
       orders.unshift(order);
       saveOrders(orders);
+
+      // 扣除庫存
+      deductCartStock(order.cartItems || _cart);
 
       // 扣除優惠券次數
       if(_cartCoupon) {
@@ -6406,6 +6425,32 @@
       renderOrderTable();
       renderShipmentList();
       showToast('訂單已刪除');
+    }
+
+
+    // ── 扣除商品庫存 ──
+    function deductStock(productId, qty) {
+      const prods = getProds();
+      const idx = prods.findIndex(p => p.id === productId);
+      if(idx < 0) return;
+      if(prods[idx].stock === null || prods[idx].stock === undefined) return;
+      prods[idx].stock = Math.max(0, (prods[idx].stock || 0) - qty);
+      localStorage.setItem(DB.products, JSON.stringify(prods));
+    }
+
+    // ── 購物車扣庫存（多品項）──
+    function deductCartStock(cartItems) {
+      if(!cartItems || !cartItems.length) return;
+      const prods = getProds();
+      let changed = false;
+      cartItems.forEach(item => {
+        const idx = prods.findIndex(p => p.id === item.productId);
+        if(idx < 0) return;
+        if(prods[idx].stock === null || prods[idx].stock === undefined) return;
+        prods[idx].stock = Math.max(0, (prods[idx].stock || 0) - item.qty);
+        changed = true;
+      });
+      if(changed) localStorage.setItem(DB.products, JSON.stringify(prods));
     }
 
   </script>
