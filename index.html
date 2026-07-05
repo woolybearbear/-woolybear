@@ -2344,6 +2344,190 @@
   </style>
   <!-- SheetJS for Excel export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getFirestore, doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCGvFj_IJe1Mic8hvmHdpoKxJLnc0ygoY8",
+      authDomain: "woolybear-offical.firebaseapp.com",
+      projectId: "woolybear-offical",
+      storageBucket: "woolybear-offical.firebasestorage.app",
+      messagingSenderId: "177687354027",
+      appId: "1:177687354027:web:a1e5f6389ab1a58c02f5ee"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+
+    // ── Firebase 讀寫 helpers（掛到 window 讓主程式使用）──
+    window._fb = {
+      db,
+      // 取得單一文件
+      async getDoc(colName, docId) {
+        const ref = doc(db, colName, docId);
+        const snap = await getDoc(ref);
+        return snap.exists() ? snap.data() : null;
+      },
+      // 儲存單一文件
+      async setDoc(colName, docId, data) {
+        await setDoc(doc(db, colName, docId), data);
+      },
+      // 取得集合所有文件
+      async getCollection(colName) {
+        const snap = await getDocs(collection(db, colName));
+        return snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+      },
+      // 新增文件（自動 ID）
+      async addDoc(colName, data) {
+        const ref = await addDoc(collection(db, colName), data);
+        return ref.id;
+      },
+      // 更新文件
+      async updateDoc(colName, docId, data) {
+        await updateDoc(doc(db, colName, docId), data);
+      },
+      // 刪除文件
+      async deleteDoc(colName, docId) {
+        await deleteDoc(doc(db, colName, docId));
+      }
+    };
+
+    window._fbReady = true;
+    window.dispatchEvent(new Event('fb-ready'));
+    console.log('Firebase 連線成功');
+
+    // ══════════════════════════════════════════════════════════════
+    // Firebase 同步層
+    // 所有資料優先從 Firebase 讀取，localStorage 作為快取
+    // ══════════════════════════════════════════════════════════════
+    const FB_COLS = {
+      orders:   'orders',
+      members:  'members',
+      points:   'points_log',
+      products: 'products',
+      site:     'site',
+      shop:     'shop',
+      coupons:  'coupons',
+      socials:  'socials',
+      hamsters: 'hamsters',
+      cats:     'cats'
+    };
+
+    // ── 訂單 Firebase 同步 ──
+    async function fbSaveOrder(order) {
+      if(!window._fb) return;
+      try { await window._fb.setDoc(FB_COLS.orders, order.id, order); } catch(e) { console.warn('fbSaveOrder:', e); }
+    }
+
+    async function fbGetOrders() {
+      if(!window._fb) return null;
+      try {
+        const orders = await window._fb.getCollection(FB_COLS.orders);
+        return orders.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+      } catch(e) { console.warn('fbGetOrders:', e); return null; }
+    }
+
+    async function fbUpdateOrder(orderId, data) {
+      if(!window._fb) return;
+      try { await window._fb.updateDoc(FB_COLS.orders, orderId, data); } catch(e) { console.warn('fbUpdateOrder:', e); }
+    }
+
+    async function fbDeleteOrder(orderId) {
+      if(!window._fb) return;
+      try { await window._fb.deleteDoc(FB_COLS.orders, orderId); } catch(e) { console.warn('fbDeleteOrder:', e); }
+    }
+
+    // ── 會員 Firebase 同步 ──
+    async function fbSaveMember(member) {
+      if(!window._fb) return;
+      try { await window._fb.setDoc(FB_COLS.members, member.id, member); } catch(e) { console.warn('fbSaveMember:', e); }
+    }
+
+    async function fbGetMembers() {
+      if(!window._fb) return null;
+      try { return await window._fb.getCollection(FB_COLS.members); } catch(e) { console.warn('fbGetMembers:', e); return null; }
+    }
+
+    // ── 集點 Firebase 同步 ──
+    async function fbSavePointLog(log) {
+      if(!window._fb) return;
+      try { await window._fb.setDoc(FB_COLS.points, log.id, log); } catch(e) { console.warn('fbSavePointLog:', e); }
+    }
+
+    async function fbGetPointsLog() {
+      if(!window._fb) return null;
+      try { return await window._fb.getCollection(FB_COLS.points); } catch(e) { console.warn('fbGetPointsLog:', e); return null; }
+    }
+
+    async function fbDeletePointLog(logId) {
+      if(!window._fb) return;
+      try { await window._fb.deleteDoc(FB_COLS.points, logId); } catch(e) { console.warn('fbDeletePointLog:', e); }
+    }
+
+    // ── 商品 Firebase 同步 ──
+    async function fbSaveProducts(prods) {
+      if(!window._fb) return;
+      try { await window._fb.setDoc(FB_COLS.products, 'all', { list: prods, updatedAt: Date.now() }); } catch(e) { console.warn('fbSaveProducts:', e); }
+    }
+
+    async function fbGetProducts() {
+      if(!window._fb) return null;
+      try {
+        const data = await window._fb.getDoc(FB_COLS.products, 'all');
+        return data ? data.list : null;
+      } catch(e) { console.warn('fbGetProducts:', e); return null; }
+    }
+
+    // ── 網站設定 Firebase 同步 ──
+    async function fbSaveSite(site) {
+      if(!window._fb) return;
+      try { await window._fb.setDoc(FB_COLS.site, 'config', site); } catch(e) { console.warn('fbSaveSite:', e); }
+    }
+
+    async function fbGetSite() {
+      if(!window._fb) return null;
+      try { return await window._fb.getDoc(FB_COLS.site, 'config'); } catch(e) { console.warn('fbGetSite:', e); return null; }
+    }
+
+    // ── 載入時從 Firebase 同步資料到 localStorage ──
+    async function syncFromFirebase() {
+      if(!window._fb) return;
+      try {
+        // 同步訂單
+        const orders = await fbGetOrders();
+        if(orders && orders.length) {
+          localStorage.setItem(DB_ORDERS, JSON.stringify(orders));
+        }
+        // 同步會員
+        const members = await fbGetMembers();
+        if(members && members.length) {
+          localStorage.setItem(DB_MEMBERS, JSON.stringify(members));
+        }
+        // 同步集點
+        const points = await fbGetPointsLog();
+        if(points && points.length) {
+          localStorage.setItem(DB_POINTS_LOG, JSON.stringify(points));
+        }
+        // 同步商品
+        const prods = await fbGetProducts();
+        if(prods && prods.length) {
+          localStorage.setItem(DB.products, JSON.stringify(prods));
+        }
+        // 同步網站設定
+        const site = await fbGetSite();
+        if(site) {
+          localStorage.setItem(DB.site, JSON.stringify(site));
+        }
+        console.log('Firebase 同步完成');
+      } catch(e) {
+        console.warn('Firebase 同步失敗，使用本地資料', e);
+      }
+    }
+
+  </script>
 </head>
 <body>
   <input type="hidden" id="_logoSrc" value="logo.jpg">
@@ -4404,8 +4588,14 @@
 
     function getMembers()   { try { return JSON.parse(localStorage.getItem(DB_MEMBERS))   || []; } catch(e) { return []; } }
     function getPointsLog() { try { return JSON.parse(localStorage.getItem(DB_POINTS_LOG))|| []; } catch(e) { return []; } }
-    function saveMembers(m)   { localStorage.setItem(DB_MEMBERS,    JSON.stringify(m)); }
-    function savePointsLog(l) { localStorage.setItem(DB_POINTS_LOG, JSON.stringify(l)); }
+    function saveMembers(m) {
+      localStorage.setItem(DB_MEMBERS, JSON.stringify(m));
+      if(window._fb) { m.forEach(member => fbSaveMember(member).catch(()=>{})); }
+    }
+    function savePointsLog(l) {
+      localStorage.setItem(DB_POINTS_LOG, JSON.stringify(l));
+      if(window._fb) { l.forEach(log => fbSavePointLog(log).catch(()=>{})); }
+    }
 
     // 目前登入的會員
     let _currentMember = null;
@@ -4901,7 +5091,13 @@
     // ══════════════════════════════════════════════════════════════
     const DB_ORDERS = 'wb_orders1';
     const getOrders  = () => { try { return JSON.parse(localStorage.getItem(DB_ORDERS)) || []; } catch(e) { return []; } };
-    const saveOrders = o => localStorage.setItem(DB_ORDERS, JSON.stringify(o));
+    const saveOrders = o => {
+      localStorage.setItem(DB_ORDERS, JSON.stringify(o));
+      // Firebase 同步（非同步，不阻塞）
+      if(window._fb) {
+        o.forEach(order => fbSaveOrder(order).catch(()=>{}));
+      }
+    };
 
     const ORDER_STATUS = {
       pending:  { label:'待出貨',  cls:'status-pending'  },
@@ -5239,6 +5435,7 @@
       const idx = orders.findIndex(o=>o.id===orderId); if(idx<0) return;
       orders[idx].status = status;
       saveOrders(orders);
+      if(window._fb) fbUpdateOrder(orderId, {status}).catch(()=>{});
       document.querySelectorAll('#order-detail-body .orders-filter-tab').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       renderOrderTable();
@@ -6421,6 +6618,7 @@
       if(!confirm('確定要刪除此訂單？此動作無法還原。')) return;
       const orders = getOrders().filter(o => o.id !== orderId);
       saveOrders(orders);
+      if(window._fb) fbDeleteOrder(orderId).catch(()=>{});
       closeEditModal('orderDetailModal');
       renderOrderTable();
       renderShipmentList();
