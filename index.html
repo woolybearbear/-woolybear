@@ -3174,7 +3174,9 @@
           <div class="admin-field"><label class="admin-label">分類</label>
             <select class="admin-input" id="p-category"></select>
           </div>
-          <div class="admin-field"><label class="admin-label">賣場連結</label><input class="admin-input" id="p-link" type="text" placeholder="https://..."></div>
+          <div class="admin-field"><label class="admin-label">賣場連結（選填）</label><input class="admin-input" id="p-link" type="text" placeholder="https://..."></div>
+          <div class="admin-field"><label class="admin-label">庫存數量（0=缺貨，空=不顯示）</label><input class="admin-input" id="p-stock" type="number" min="0" placeholder="例：50"></div>
+          <div class="admin-field"><label class="admin-label">低庫存警示門檻</label><input class="admin-input" id="p-stock-low" type="number" min="0" placeholder="例：5"></div>
           <div class="admin-field" style="grid-column:1/-1"><label class="admin-label">商品描述</label><textarea class="admin-input admin-textarea" id="p-desc" rows="3"></textarea></div>
         </div>
         <hr class="admin-section-sep">
@@ -3273,12 +3275,12 @@
     };
 
     const PAGES0 = [
-      { id:'home',     name:'首頁',   type:'builtin', href:'#',      position:'nav', locked:true },
-      { id:'babies',   name:'尋家鼠寶', type:'builtin', href:'#',    position:'nav', locked:true },
-      { id:'products', name:'精選商品', type:'builtin', href:'#',    position:'nav', locked:true },
-      { id:'policy',   name:'購鼠規範', type:'builtin', href:'#',    position:'nav', locked:true },
-      { id:'shipping',  name:'如何寄送', type:'builtin', href:'#',    position:'nav', locked:true },
-      { id:'about',     name:'關於我們', type:'builtin', href:'#',    position:'nav', locked:true }
+      { id:'home',     name:'首頁',   type:'builtin', href:'javascript:void(0)',      position:'nav', locked:true },
+      { id:'babies',   name:'尋家鼠寶', type:'builtin', href:'javascript:void(0)',    position:'nav', locked:true },
+      { id:'products', name:'精選商品', type:'builtin', href:'javascript:void(0)',    position:'nav', locked:true },
+      { id:'policy',   name:'購鼠規範', type:'builtin', href:'javascript:void(0)',    position:'nav', locked:true },
+      { id:'shipping',  name:'如何寄送', type:'builtin', href:'javascript:void(0)',    position:'nav', locked:true },
+      { id:'about',     name:'關於我們', type:'builtin', href:'javascript:void(0)',    position:'nav', locked:true }
     ];
 
     const CATS0 = [
@@ -4288,6 +4290,7 @@
       if(!confirm('確定刪除？'))return;
       const id=document.getElementById('product-edit-id').value;
       const prods=getProds().filter(p=>p.id!==id); dbSet(DB.products,prods);
+      if(window._fb) fbSaveProducts(prods).catch(()=>{});
       renderProdTable(); if(_currentPage==='products')renderPage('products');
       closeEditModal('productModal'); showToast('商品已刪除');
     }
@@ -4534,6 +4537,19 @@
     // INIT
     // ═══════════════════════════════════════════════════════
     document.addEventListener('DOMContentLoaded', () => {
+      // 重置舊版不相容的 localStorage key
+      ['wb_pages3','wb_hamsters3','wb_products3','wb_cats3'].forEach(k => {
+        const v = localStorage.getItem(k);
+        if(v) {
+          try {
+            const parsed = JSON.parse(v);
+            // 若是 pages 資料且含有舊格式的 href:'#'，重置
+            if(Array.isArray(parsed) && parsed[0] && parsed[0].href === '#') {
+              localStorage.removeItem(k);
+            }
+          } catch(e) {}
+        }
+      });
       // Migrate: ensure 'about' and 'shipping' pages are type:'builtin' (not 'link')
       try {
         const storedPages = JSON.parse(localStorage.getItem(DB.pages));
@@ -4672,7 +4688,12 @@
       sessionSave(found);
       closeModal();
       updateMemberNav();
+      if(_currentPage === 'member') renderPage('member');
       showToast(`歡迎回來，${found.name}！`);
+      // 若購物車有東西，自動開啟結帳
+      if(_cart && _cart.length > 0) {
+        setTimeout(() => openCheckout(), 400);
+      }
     }
 
     // ── 註冊 ──
@@ -4701,6 +4722,10 @@
       closeModal();
       updateMemberNav();
       showToast(`註冊成功！歡迎加入，${name}！`);
+      // 若購物車有東西，自動開啟結帳
+      if(_cart && _cart.length > 0) {
+        setTimeout(() => openCheckout(), 400);
+      }
     }
 
     // ── 登出 ──
@@ -4760,6 +4785,36 @@
         </tr>`).join('')
         : `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px">尚無集點紀錄</td></tr>`;
 
+      // 取得會員訂單
+      const allOrders = getOrders();
+      const myOrders  = allOrders.filter(o => o.memberId === member.id)
+                                  .sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+
+      const orderRows = myOrders.length ? myOrders.map(o => {
+        const statusInfo = ORDER_STATUS[o.status] || {label:o.status, color:'#999'};
+        const d = new Date(o.createdAt);
+        const dateStr = d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate();
+        const productStr = o.cartItems
+          ? o.cartItems.map(i=>i.name+(i.qty>1?' x'+i.qty:'')).join('、')
+          : (o.productName||'') + (o.qty>1?' x'+o.qty:'');
+        return `
+          <div style="border:1px solid var(--border-color);margin-bottom:12px;background:#fff">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #f5f5f5;background:var(--brand-cream,#FAF7F2)">
+              <div style="font-family:monospace;font-size:12px;color:var(--brand-red);font-weight:600">${o.id}</div>
+              <div style="font-size:11px;color:var(--text-muted)">${dateStr}</div>
+              <div style="font-size:11px;padding:3px 10px;border-radius:20px;background:${statusInfo.color}18;color:${statusInfo.color};border:1px solid ${statusInfo.color}40">${statusInfo.label}</div>
+            </div>
+            <div style="padding:12px 16px">
+              <div style="font-size:13px;color:var(--text-main);margin-bottom:6px">${productStr}</div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div style="font-size:12px;color:var(--text-muted)">取件門市：${o.store||'—'}</div>
+                <div style="font-size:14px;font-weight:500;color:var(--brand-red)">NT$ ${o.total||o.subtotal||0}</div>
+              </div>
+              ${o.trackingNum ? `<div style="font-size:11px;color:#27ae60;margin-top:6px">交貨便代碼：${o.trackingNum}</div>` : ''}
+            </div>
+          </div>`;
+      }).join('') : `<div style="text-align:center;padding:40px 20px;color:var(--text-muted);font-size:13px;letter-spacing:1px">尚無訂單紀錄</div>`;
+
       return `
         <div class="member-page-wrap">
           <!-- 個人資訊 -->
@@ -4796,6 +4851,17 @@
               <thead><tr><th>日期</th><th>項目</th><th>點數</th><th>餘額</th></tr></thead>
               <tbody>${logRows}</tbody>
             </table>
+          </div>
+
+          <!-- 我的訂單 -->
+          <div class="member-card">
+            <div class="member-card-head">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              我的訂單
+            </div>
+            <div style="padding:0 16px 16px">
+              \${orderRows}
+            </div>
           </div>
 
           <!-- 修改密碼 -->
@@ -5427,6 +5493,7 @@
       const idx = orders.findIndex(o=>o.id===orderId); if(idx<0) return;
       orders[idx].trackingNum = document.getElementById('od-tracking').value.trim();
       saveOrders(orders);
+      if(window._fb) fbUpdateOrder(orderId, {trackingNum: orders[idx].trackingNum}).catch(()=>{});
       showToast('代碼已儲存');
     }
 
@@ -5439,6 +5506,7 @@
       document.querySelectorAll('#order-detail-body .orders-filter-tab').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       renderOrderTable();
+      renderShipmentList(); // 更新出貨單清單
       showToast(`狀態已更新為：${ORDER_STATUS[status].label}`);
     }
 
@@ -5670,10 +5738,10 @@
       const orders = getOrders();
       const idx = orders.findIndex(o => o.id === orderId);
       if(idx < 0) return;
-      // 更新狀態為 shipping（已確認）但先維持 pending，讓賣家自己決定
       orders[idx].confirmed = true;
       saveOrders(orders);
-      openOrderDetail(orderId); // 重繪
+      if(window._fb) fbUpdateOrder(orderId, {confirmed: true}).catch(()=>{});
+      openOrderDetail(orderId);
       showToast('訂單已確認！');
     }
 
@@ -6126,12 +6194,18 @@
     // ── 開啟結帳 ──
     function openCheckout() {
       closeCart();
-      // Fill member info if logged in
+      // 強制登入才能結帳
+      if(!_currentMember) {
+        openModal('login');
+        showToast('請先登入或註冊，才能完成下單');
+        return;
+      }
+      // 自動帶入會員資料
       if(_currentMember) {
         const nameEl  = document.getElementById('co-name');
         const phoneEl = document.getElementById('co-phone');
-        if(nameEl && !nameEl.value)   nameEl.value  = _currentMember.name;
-        if(phoneEl && !phoneEl.value) phoneEl.value = _currentMember.phone;
+        if(nameEl)  nameEl.value  = _currentMember.name  || '';
+        if(phoneEl) phoneEl.value = _currentMember.phone || '';
       }
       // Items list
       const itemsList = document.getElementById('checkout-items-list');
