@@ -2743,6 +2743,35 @@
       showToast('會員「' + m.name + '」已永久刪除');
     }
 
+
+    // ── 永久刪除會員 ──
+    function deleteMemberPermanent() {
+      if(!_detailMemberId) return;
+      const members = getMembers();
+      const m = members.find(x => x.id === _detailMemberId);
+      if(!m) return;
+      if(!confirm('確定要永久刪除會員「' + m.name + '」？\n此動作無法還原，所有資料將一併刪除。')) return;
+
+      // 刪除會員
+      const newMembers = members.filter(x => x.id !== _detailMemberId);
+      saveMembers(newMembers);
+      if(window._fb) window._fb.deleteDoc('members', _detailMemberId).catch(()=>{});
+
+      // 刪除集點紀錄
+      const newLog = getPointsLog().filter(l => l.memberId !== _detailMemberId);
+      savePointsLog(newLog);
+      if(window._fb) {
+        newLog.forEach(l => {
+          if(l.memberId === _detailMemberId)
+            window._fb.deleteDoc('points_log', l.id).catch(()=>{});
+        });
+      }
+
+      closeEditModal('memberDetailModal');
+      renderMemberAdminPanel();
+      showToast('會員「' + m.name + '」已永久刪除');
+    }
+
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script>emailjs.init("F6q7UsiNLw8Ws_t7-");</script>
@@ -2979,7 +3008,7 @@
           <div class="admin-card">
             <div class="admin-card-title">商品列表</div>
             <table class="admin-table">
-              <thead><tr><th>縮圖</th><th>名稱</th><th>分類</th><th>庫存</th><th>起始價格</th><th>操作</th></tr></thead>
+              <thead><tr><th>縮圖</th><th>名稱</th><th>分類</th><th>庫存總量</th><th>起始價格</th><th>操作</th></tr></thead>
               <tbody id="product-table-body"></tbody>
             </table>
           </div>
@@ -3187,7 +3216,7 @@
                 style="max-width:220px;padding:7px 12px;font-size:12px">
             </div>
             <table class="admin-table">
-              <thead><tr><th>姓名</th><th>手機號碼</th><th>加入日期</th><th>點數</th><th>操作</th></tr></thead>
+              <thead><tr><th>姓名</th><th>手機號碼</th><th>Email</th><th>加入日期</th><th>點數</th><th>操作</th></tr></thead>
               <tbody id="member-admin-tbody"></tbody>
             </table>
           </div>
@@ -4458,9 +4487,24 @@
         const cat=cats.find(c=>c.id===p.category)||{name:'—'};
         const start=p.prices&&p.prices.length?p.prices[0].price:'—';
         const st = stockInfo(p);
-        const stockCell = st
-          ? `<span class="stock-badge ${st.cls}" style="font-size:11px"><span class="stock-dot"></span>${st.label}</span>`
-          : '<span style="color:#ccc;font-size:11px">—</span>';
+        const prices = p.prices || [];
+        const hasVStock = prices.some(r => r.stock !== null && r.stock !== undefined);
+        let stockNum = '';
+        if(hasVStock) {
+          const total = prices.reduce((s,r) => s + (r.stock !== null && r.stock !== undefined ? r.stock : 0), 0);
+          const detail = prices.filter(r => r.stock !== null && r.stock !== undefined)
+            .map(r => r.name + ':' + r.stock).join(' / ');
+          stockNum = '<div style="font-size:12px;font-weight:600">共 ' + total + ' 件</div>' +
+            '<div style="font-size:10px;color:var(--text-muted)">' + detail + '</div>';
+        } else if(p.stock !== null && p.stock !== undefined) {
+          stockNum = '<div style="font-size:12px;font-weight:600">' + p.stock + ' 件</div>';
+        } else {
+          stockNum = '<div style="font-size:11px;color:#ccc">不限</div>';
+        }
+        const stockStatusBadge = st && st.label
+          ? '<div style="margin-top:3px"><span class="stock-badge ' + st.cls + '" style="font-size:10px"><span class="stock-dot"></span>' + st.label + '</span></div>'
+          : '';
+        const stockCell = '<div>' + stockNum + stockStatusBadge + '</div>';
         return `<tr>
           <td>${p.imgs&&p.imgs.length?`<img src="${p.imgs[0]}" style="width:44px;height:44px;object-fit:cover;border-radius:3px;">`:'<span style="color:#ccc;font-size:11px">無圖</span>'}</td>
           <td>${p.name}</td><td>${cat.name}</td><td>${stockCell}</td><td>${start}</td>
@@ -4491,7 +4535,7 @@
         document.getElementById('product-delete-btn').style.display='block';
         _pImgs=[...(p.imgs||[])]; renderMultiThumbs('p-img-thumbs',_pImgs,'p');
         (p.specs||[]).forEach(s=>addSpecRow(s.k,s.v));
-        (p.prices||[]).forEach(r=>addPriceRow(r.name,r.desc,r.price));
+        (p.prices||[]).forEach(r=>addPriceRow(r.name,r.desc,r.price,r.stock!==undefined?r.stock:''));
       }
       document.getElementById('productModal').style.display='flex';
     }
@@ -4517,9 +4561,32 @@
     function addSpecRow(k='',v=''){const l=document.getElementById('spec-row-list');const r=document.createElement('div');r.className='spec-row';r.innerHTML=`<input class="admin-input spec-key" type="text" placeholder="規格名稱" value="${k}"><input class="admin-input spec-val" type="text" placeholder="規格值" value="${v}"><button class="row-del-btn" onclick="this.parentElement.remove()">&#215;</button>`;l.appendChild(r);}
     function clearSpecRows(){const l=document.getElementById('spec-row-list');if(l)l.innerHTML='';}
     function readSpecRows(){return[...document.querySelectorAll('#spec-row-list .spec-row')].map(r=>({k:r.querySelector('.spec-key').value,v:r.querySelector('.spec-val').value})).filter(s=>s.k||s.v);}
-    function addPriceRow(name='',desc='',price=''){const l=document.getElementById('price-row-list');const r=document.createElement('div');r.className='price-row';r.innerHTML=`<input class="admin-input price-name" type="text" placeholder="品項" value="${name}"><input class="admin-input price-desc" type="text" placeholder="說明" value="${desc}"><input class="admin-input price-val" type="text" placeholder="NT$ 000" value="${price}"><button class="row-del-btn" onclick="this.parentElement.remove()">&#215;</button>`;l.appendChild(r);}
+    function addPriceRow(name='',desc='',price='',stock=''){
+      const l=document.getElementById('price-row-list');
+      const r=document.createElement('div');
+      r.className='price-row';
+      r.style.cssText='display:grid;grid-template-columns:1fr 1fr 1fr 80px 36px;gap:6px;margin-bottom:6px;align-items:center';
+      r.innerHTML=
+        '<input class="admin-input price-name" type="text" placeholder="品項名稱" value="'+name+'" style="font-size:12px">'+
+        '<input class="admin-input price-desc" type="text" placeholder="說明" value="'+desc+'" style="font-size:12px">'+
+        '<input class="admin-input price-val" type="text" placeholder="NT$ 0" value="'+price+'" style="font-size:12px">'+
+        '<input class="admin-input price-stock" type="number" placeholder="庫存" min="0" value="'+(stock===''||stock===null||stock===undefined?'':stock)+'" style="font-size:12px" title="此規格庫存數量（空=不限）">'+
+        '<button class="row-del-btn" onclick="this.parentElement.remove()">&#215;</button>';
+      l.appendChild(r);
+    }
     function clearPriceRows(){const l=document.getElementById('price-row-list');if(l)l.innerHTML='';}
-    function readPriceRows(){return[...document.querySelectorAll('#price-row-list .price-row')].map(r=>({name:r.querySelector('.price-name').value,desc:r.querySelector('.price-desc').value,price:r.querySelector('.price-val').value})).filter(r=>r.name||r.price);}
+    function readPriceRows(){
+      return [...document.querySelectorAll('#price-row-list .price-row')].map(r=>{
+        const stockEl = r.querySelector('.price-stock');
+        const stockVal = stockEl ? stockEl.value : '';
+        return {
+          name:  r.querySelector('.price-name').value,
+          desc:  r.querySelector('.price-desc').value,
+          price: r.querySelector('.price-val').value,
+          stock: stockVal === '' ? null : parseInt(stockVal)
+        };
+      }).filter(r=>r.name||r.price);
+    }
 
     // ═══════════════════════════════════════════════════════
     // ADMIN – POLICY
@@ -4756,6 +4823,11 @@
     // INIT
     // ═══════════════════════════════════════════════════════
     document.addEventListener('DOMContentLoaded', () => {
+      // ── 一次性清除會員資料（測試用，執行後自動移除此段）──
+      localStorage.removeItem('wb_members4');
+      localStorage.removeItem('wb_points_log4');
+      sessionStorage.removeItem('wb_session');
+
       // 重置舊版不相容的 localStorage key
       ['wb_pages3','wb_hamsters3','wb_products3','wb_cats3'].forEach(k => {
         const v = localStorage.getItem(k);
@@ -4891,6 +4963,10 @@
         const fe = document.getElementById('forget-email');
         if(fe) fe.value = '';
       }
+      // 清空註冊驗證流程
+      if(tab === 'register') {
+        backToRegStep1();
+      }
     }
     // keep old switchTab alias
     // [switchTab aliased to switchAuthTab]
@@ -4903,58 +4979,134 @@
 
     // ── 登入 ──
     function doLogin() {
-      const phone = document.getElementById('login-phone').value.trim();
-      const pw    = document.getElementById('login-pw').value;
+      const phone = (document.getElementById('login-phone')?.value || '').trim();
+      const pw    = document.getElementById('login-pw')?.value || '';
       const err   = document.getElementById('login-err');
-      if(!phone || !pw) { err.textContent = '請輸入手機號碼與密碼'; return; }
+      const setErr = (msg) => { if(err) err.textContent = msg; else alert(msg); };
+      if(!phone || !pw) { setErr('請輸入手機號碼與密碼'); return; }
       const members = getMembers();
       const found   = members.find(m => m.phone === phone);
-      if(!found || found.password !== btoa(pw)) { err.textContent = '手機號碼或密碼錯誤'; return; }
+      // 支援舊版 btoa(pw) 和新版 btoa(unescape(encodeURIComponent(pw)))
+      let loginPw, loginPwAlt;
+      try { loginPw = btoa(unescape(encodeURIComponent(pw))); } catch(e) { loginPw = btoa(pw); }
+      try { loginPwAlt = btoa(pw); } catch(e) { loginPwAlt = loginPw; }
+      if(!found || (found.password !== loginPw && found.password !== loginPwAlt)) {
+        setErr('手機號碼或密碼錯誤');
+        return;
+      }
       sessionSave(found);
       closeModal();
       updateMemberNav();
       if(_currentPage === 'member') renderPage('member');
-      showToast(`歡迎回來，${found.name}！`);
-      // 若購物車有東西，自動開啟結帳
+      showToast('歡迎回來，' + found.name + '！');
       if(_cart && _cart.length > 0) {
         setTimeout(() => openCheckout(), 400);
+      }
+    }
+    // 註冊驗證碼暫存
+    var _regVerifyCode   = null;
+    var _regVerifyExpiry = null;
+    var _regPendingData  = null;
+
+    function sendRegVerifyCode() {
+      try {
+        const name  = (document.getElementById('reg-name')?.value || '').trim();
+        const phone = (document.getElementById('reg-phone')?.value || '').trim();
+        const email = (document.getElementById('reg-email')?.value || '').trim();
+        const pw    = document.getElementById('reg-pw')?.value || '';
+        const pw2   = document.getElementById('reg-pw2')?.value || '';
+        const err   = document.getElementById('reg-err');
+        const setErr = (msg) => { if(err) err.textContent = msg; };
+
+        if(!name)  { setErr('請填寫姓名'); return; }
+        if(!phone) { setErr('請填寫手機號碼'); return; }
+        if(!email) { setErr('請填寫 Email'); return; }
+        if(!pw)    { setErr('請填寫密碼'); return; }
+        if(!/^09\d{8}$/.test(phone)) { setErr('手機號碼格式錯誤，需為 09xxxxxxxx'); return; }
+        if(!/^[^@]+@[^@]+\.[^@]+$/.test(email)) { setErr('Email 格式不正確'); return; }
+        if(pw.length < 6) { setErr('密碼至少 6 個字元'); return; }
+        if(pw !== pw2) { setErr('兩次密碼不一致'); return; }
+
+        const members = getMembers();
+        if(members.find(m => m.phone === phone)) { setErr('此手機號碼已被註冊'); return; }
+        if(members.find(m => m.email && m.email === email)) { setErr('此 Email 已被註冊'); return; }
+
+        if(typeof emailjs === 'undefined') { setErr('郵件系統載入中，請稍後再試'); return; }
+
+        // 產生驗證碼
+        _regVerifyCode   = Math.floor(100000 + Math.random() * 900000).toString();
+        _regVerifyExpiry = Date.now() + 10 * 60 * 1000;
+        _regPendingData  = { name, phone, email, pw };
+
+        const btn = document.getElementById('reg-send-btn');
+        if(btn) { btn.textContent = '寄送中...'; btn.disabled = true; }
+
+        emailjs.send('service_mv97yvi', 'template_n4kcn2x', {
+          customer_name:  name,
+          customer_email: email,
+          verify_code:    _regVerifyCode
+        }).then(() => {
+          document.getElementById('reg-step1').style.display = 'none';
+          document.getElementById('reg-step2').style.display = 'block';
+          const msg = document.getElementById('reg-sent-msg');
+          if(msg) msg.textContent = '驗證碼已寄到 ' + email + '，10 分鐘內有效';
+          if(btn) { btn.textContent = '取得驗證碼'; btn.disabled = false; }
+        }).catch(() => {
+          if(err) err.textContent = '寄送驗證碼失敗，請稍後再試';
+          if(btn) { btn.textContent = '取得驗證碼'; btn.disabled = false; }
+        });
+      } catch(e) {
+        console.error('sendRegVerifyCode error:', e);
+        alert('發生錯誤：' + e.message);
       }
     }
 
-    // ── 註冊 ──
     function doRegister() {
-      const name  = document.getElementById('reg-name').value.trim();
-      const phone = document.getElementById('reg-phone').value.trim();
-      const email = (document.getElementById('reg-email')?.value || '').trim();
-      const pw    = document.getElementById('reg-pw').value;
-      const pw2   = document.getElementById('reg-pw2').value;
-      const err   = document.getElementById('reg-err');
-      if(!name || !phone || !email || !pw) { err.textContent = '請填寫所有欄位（含 Email）'; return; }
-      if(!/^09\d{8}$/.test(phone)) { err.textContent = '請輸入正確的手機號碼格式（09xxxxxxxx）'; return; }
-      if(!/^[^@]+@[^@]+\.[^@]+$/.test(email)) { err.textContent = 'Email 格式不正確'; return; }
-      if(pw.length < 6) { err.textContent = '密碼至少 6 個字元'; return; }
-      if(pw !== pw2)    { err.textContent = '兩次密碼不一致'; return; }
-      const members = getMembers();
-      if(members.find(m => m.phone === phone)) { err.textContent = '此手機號碼已被註冊'; return; }
-      if(members.find(m => m.email && m.email === email)) { err.textContent = '此 Email 已被註冊'; return; }
-      const newMember = {
-        id: 'mb' + Date.now(),
-        name, phone, email,
-        password: btoa(pw),
-        joinedAt: Date.now(),
-        note: ''
-      };
-      members.push(newMember);
-      saveMembers(members);
-      sessionSave(newMember);
-      closeModal();
-      updateMemberNav();
-      showToast(`註冊成功！歡迎加入，${name}！`);
-      // 若購物車有東西，自動開啟結帳
-      if(_cart && _cart.length > 0) {
-        setTimeout(() => openCheckout(), 400);
+      try {
+        const code = (document.getElementById('reg-verify-code')?.value || '').trim();
+        const err2 = document.getElementById('reg-err2');
+        const setErr = (msg) => { if(err2) err2.textContent = msg; };
+
+        if(!_regVerifyCode || !_regPendingData) { setErr('驗證碼已失效，請重新申請'); return; }
+        if(Date.now() > _regVerifyExpiry) { setErr('驗證碼已過期，請重新申請'); backToRegStep1(); return; }
+        if(code !== _regVerifyCode) { setErr('驗證碼錯誤，請再次確認'); return; }
+
+        const { name, phone, email, pw } = _regPendingData;
+        const members = getMembers();
+        if(members.find(m => m.phone === phone)) { setErr('此手機號碼已被其他人搶先註冊'); return; }
+
+        let encodedPw;
+        try { encodedPw = btoa(unescape(encodeURIComponent(pw))); } catch(e) { encodedPw = btoa(pw); }
+
+        const newMember = { id:'mb'+Date.now(), name, phone, email, password:encodedPw, joinedAt:Date.now(), note:'' };
+        members.push(newMember);
+        saveMembers(members);
+        if(window._fb) fbSaveMember(newMember).catch(()=>{});
+        sessionSave(newMember);
+
+        // 清除驗證碼
+        _regVerifyCode = null; _regVerifyExpiry = null; _regPendingData = null;
+
+        closeModal();
+        updateMemberNav();
+        showToast('註冊成功！歡迎加入，' + name + '！');
+        if(_cart && _cart.length > 0) { setTimeout(() => openCheckout(), 400); }
+      } catch(e) {
+        console.error('doRegister error:', e);
+        alert('註冊失敗：' + e.message);
       }
     }
+
+    function backToRegStep1() {
+      _regVerifyCode = null; _regVerifyExpiry = null; _regPendingData = null;
+      document.getElementById('reg-step1').style.display = 'block';
+      document.getElementById('reg-step2').style.display = 'none';
+      const code = document.getElementById('reg-verify-code');
+      if(code) code.value = '';
+      const err2 = document.getElementById('reg-err2');
+      if(err2) err2.textContent = '';
+    }
+
 
     // ── 登出 ──
     function doLogout() {
@@ -5123,7 +5275,7 @@
       const tbody = document.getElementById('member-admin-tbody');
       if(!tbody) return;
       if(!members.length) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#aaa;padding:32px;letter-spacing:1px">尚無會員</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#aaa;padding:32px;letter-spacing:1px">尚無會員</td></tr>`;
         return;
       }
       tbody.innerHTML = members.map(m => {
@@ -6213,6 +6365,24 @@
       }
 
       const priceObj = prices[0] || null;
+
+      // 即時庫存檢查（單規格）
+      const variantStock = priceObj?.stock;
+      if(variantStock !== null && variantStock !== undefined) {
+        // 計算購物車中此規格已有數量
+        const inCart = _cart.filter(i => i.productId === productId && (i.variant === (priceObj?.name||''))).reduce((s,i) => s+i.qty, 0);
+        if(inCart >= variantStock) {
+          showToast('庫存不足，此規格剩餘 ' + variantStock + ' 件');
+          return;
+        }
+      } else if(p.stock !== null && p.stock !== undefined) {
+        const inCart = _cart.filter(i => i.productId === productId).reduce((s,i) => s+i.qty, 0);
+        if(inCart >= p.stock) {
+          showToast('庫存不足，僅剩 ' + p.stock + ' 件');
+          return;
+        }
+      }
+
       const numericPrice = parseInt((priceObj?.price||'0').replace(/[^\d]/g,'')) || 0;
       _addToCartItem({
         productId, name: p.name,
@@ -6226,14 +6396,35 @@
     function _addToCartItem(item) {
       const key = item.productId + '::' + item.variant;
       const idx = _cart.findIndex(c => c.productId + '::' + c.variant === key);
+      const curQty = idx >= 0 ? _cart[idx].qty : 0;
+
+      // 庫存檢查
+      const p = getProds().find(x => x.id === item.productId);
+      if(p) {
+        const priceObj = (p.prices||[]).find(r => r.name === item.variant);
+        const vStock = priceObj ? priceObj.stock : undefined;
+        if(vStock !== null && vStock !== undefined) {
+          if(curQty + 1 > vStock) {
+            showToast('庫存不足！此規格最多 ' + vStock + ' 件');
+            return;
+          }
+        } else if(p.stock !== null && p.stock !== undefined) {
+          // 整體庫存：計算此商品所有規格購物車總量
+          const totalInCart = _cart.filter(c => c.productId === item.productId).reduce((s,c)=>s+c.qty,0);
+          if(totalInCart + 1 > p.stock) {
+            showToast('庫存不足！此商品最多 ' + p.stock + ' 件');
+            return;
+          }
+        }
+      }
+
       if(idx >= 0) { _cart[idx].qty += 1; }
       else { _cart.push({ ...item, qty: 1 }); }
       updateCartBadge();
       renderCartBody();
-      // pop animation on badge
       const badge = document.getElementById('cart-badge');
       if(badge) { badge.classList.remove('cart-pop'); void badge.offsetWidth; badge.classList.add('cart-pop'); }
-      showToast(`已加入購物車：${item.name}${item.variant?' · '+item.variant:''}`);
+      showToast('已加入購物車：' + item.name + (item.variant?' · '+item.variant:''));
     }
 
     // ── 規格選擇 picker（多規格商品）──
@@ -6244,34 +6435,115 @@
       if(!body || !modal) return;
       _orderProductId = p.id;
 
-      body.innerHTML = `
-        <div style="padding:4px 0 16px">
-          <div style="font-size:12px;letter-spacing:1px;color:var(--text-muted);margin-bottom:14px">選擇規格後加入購物車</div>
-          <div class="order-variant-grid" style="margin-bottom:24px">
-            ${prices.map(r => `<button class="order-variant-btn" onclick="confirmAddVariantToCart('${p.id}','${r.name}','${r.price}')">${r.name}<br><span style="font-size:10px;opacity:0.7">${r.price}</span></button>`).join('')}
-          </div>
-          <button class="btn btn-outline btn-full" onclick="closeOrderModal()">取消</button>
-        </div>`;
+      // Store prices on window for button access
+      window._vpPrices = prices;
+      window._vpProduct = p;
+
+      var btns = '';
+      for(var i=0; i<prices.length; i++) {
+        var r = prices[i];
+        var inCart = 0;
+        for(var j=0; j<_cart.length; j++) {
+          if(_cart[j].productId === p.id && _cart[j].variant === r.name) inCart += _cart[j].qty;
+        }
+        var hasVStock = r.stock !== null && r.stock !== undefined;
+        var isOut     = hasVStock ? (r.stock <= 0) : (p.stock !== null && p.stock !== undefined && p.stock <= 0);
+        var cartFull  = hasVStock ? (inCart >= r.stock) : (p.stock !== null && p.stock !== undefined && inCart >= p.stock);
+        var disabled  = isOut || cartFull;
+        var stockLabel = '';
+        if(isOut)         stockLabel = '<div style="font-size:10px;color:#C0392B;margin-top:3px">已售完</div>';
+        else if(cartFull) stockLabel = '<div style="font-size:10px;color:#C0392B;margin-top:3px">已達上限</div>';
+        else if(hasVStock && r.stock <= 5) stockLabel = '<div style="font-size:10px;color:#E67E22;margin-top:3px">剩 '+r.stock+' 件</div>';
+
+        btns += '<button class="order-variant-btn" data-pidx="'+i+'"' +
+          (disabled ? ' disabled style="opacity:0.4;cursor:not-allowed"' : '') + '>' +
+          '<div style="font-weight:500">'+r.name+'</div>' +
+          '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">'+(r.desc||'')+'</div>' +
+          '<div style="font-size:12px;color:var(--brand-red);margin-top:4px">'+r.price+'</div>' +
+          stockLabel + '</button>';
+      }
+
+      body.innerHTML =
+        '<div style="padding:4px 0 16px">' +
+        '<div style="font-size:12px;letter-spacing:1px;color:var(--text-muted);margin-bottom:14px">選擇規格後加入購物車</div>' +
+        '<div class="order-variant-grid" id="vp-grid" style="margin-bottom:24px">'+btns+'</div>' +
+        '</div>';
+
+      // Bind click events after render
+      var grid = document.getElementById('vp-grid');
+      if(grid) {
+        grid.querySelectorAll('.order-variant-btn:not([disabled])').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            _pickVariant(p.id, parseInt(this.getAttribute('data-pidx')));
+          });
+        });
+      }
       modal.style.display = 'flex';
     }
 
-    function confirmAddVariantToCart(productId, variantName, variantPrice) {
-      const p = getProds().find(x => x.id === productId);
-      _addToCartItem({
-        productId, name: p?.name || '',
-        variant: variantName,
-        price: variantPrice,
-        numericPrice: parseInt(variantPrice.replace(/[^\d]/g,'')) || 0,
-        img: (p?.imgs||[])[0] || null
-      });
+    function _pickVariant(productId, priceIdx) {
+      var p = getProds().find(function(x){ return x.id === productId; });
+      if(!p) return;
+      var r = (p.prices||[])[priceIdx];
+      if(!r) return;
+      if(r.stock !== null && r.stock !== undefined) {
+        var inCart = _cart.filter(function(i){ return i.productId === productId && i.variant === r.name; }).reduce(function(s,i){ return s+i.qty; },0);
+        if(inCart >= r.stock) { showToast('庫存不足，此規格剩餘 '+r.stock+' 件'); closeOrderModal(); return; }
+      }
+      var numericPrice = parseInt((r.price||'0').replace(/[^0-9]/g,'')) || 0;
+      _addToCartItem({ productId: productId, name: p.name, variant: r.name, price: r.price, numericPrice: numericPrice, img: (p.imgs||[])[0]||null });
       closeOrderModal();
     }
 
-    // ── 購物車數量 ──
+
+    function confirmAddVariantToCart(productId, variantName, variantPrice) {
+      const p = getProds().find(x => x.id === productId);
+      if(!p) return;
+      const priceObj = (p.prices||[]).find(r => r.name === variantName);
+
+      // 即時庫存檢查（多規格）
+      if(priceObj && priceObj.stock !== null && priceObj.stock !== undefined) {
+        const inCart = _cart.filter(i => i.productId === productId && i.variant === variantName).reduce((s,i) => s+i.qty, 0);
+        if(inCart >= priceObj.stock) {
+          showToast('庫存不足，此規格剩餘 ' + priceObj.stock + ' 件');
+          closeOrderModal();
+          return;
+        }
+      }
+
+      const numericPrice = parseInt((variantPrice||'0').replace(/[^\d]/g,'')) || 0;
+      _addToCartItem({
+        productId, name: p.name,
+        variant: variantName,
+        price: variantPrice,
+        numericPrice,
+        img: (p.imgs||[])[0] || null
+      });
+      closeOrderModal();
+    }
     function cartChangeQty(key, delta) {
       const idx = _cart.findIndex(c => c.productId + '::' + c.variant === key);
       if(idx < 0) return;
-      _cart[idx].qty = Math.max(1, _cart[idx].qty + delta);
+      const item = _cart[idx];
+      const newQty = item.qty + delta;
+      if(newQty < 1) return;
+
+      // 加量時做庫存上限檢查
+      if(delta > 0) {
+        const p = getProds().find(x => x.id === item.productId);
+        if(p) {
+          const priceObj = (p.prices||[]).find(r => r.name === item.variant);
+          const vStock = priceObj ? priceObj.stock : undefined;
+          if(vStock !== null && vStock !== undefined) {
+            if(newQty > vStock) { showToast('已達庫存上限（' + vStock + ' 件）'); return; }
+          } else if(p.stock !== null && p.stock !== undefined) {
+            const totalInCart = _cart.filter(c => c.productId === item.productId).reduce((s,c)=>s+c.qty,0);
+            if(totalInCart + delta > p.stock) { showToast('已達庫存上限（' + p.stock + ' 件）'); return; }
+          }
+        }
+      }
+
+      _cart[idx].qty = newQty;
       updateCartBadge(); renderCartBody();
     }
 
@@ -6922,11 +7194,22 @@
       cartItems.forEach(item => {
         const idx = prods.findIndex(p => p.id === item.productId);
         if(idx < 0) return;
-        if(prods[idx].stock === null || prods[idx].stock === undefined) return;
-        prods[idx].stock = Math.max(0, (prods[idx].stock || 0) - item.qty);
-        changed = true;
+        const p = prods[idx];
+        // 優先扣規格庫存
+        const priceIdx = (p.prices||[]).findIndex(r => r.name === item.variant);
+        if(priceIdx >= 0 && p.prices[priceIdx].stock !== null && p.prices[priceIdx].stock !== undefined) {
+          p.prices[priceIdx].stock = Math.max(0, (p.prices[priceIdx].stock||0) - item.qty);
+          changed = true;
+        } else if(p.stock !== null && p.stock !== undefined) {
+          // 無規格庫存 → 扣整體庫存
+          p.stock = Math.max(0, (p.stock||0) - item.qty);
+          changed = true;
+        }
       });
-      if(changed) localStorage.setItem(DB.products, JSON.stringify(prods));
+      if(changed) {
+        localStorage.setItem(DB.products, JSON.stringify(prods));
+        if(window._fb) fbSaveProducts(prods).catch(()=>{});
+      }
     }
 
   </script>
@@ -7069,30 +7352,49 @@
 
         <!-- 註冊 -->
         <div class="auth-pane" id="auth-pane-register">
-          <div class="form-group">
-            <label class="form-label">姓名</label>
-            <input type="text" class="form-input" id="reg-name" placeholder="您的姓名">
+          <!-- Step 1: 填寫資料 + 寄驗證碼 -->
+          <div id="reg-step1">
+            <div class="form-group">
+              <label class="form-label">姓名 <span style="color:#C0392B">*</span></label>
+              <input type="text" class="form-input" id="reg-name" placeholder="您的姓名">
+            </div>
+            <div class="form-group">
+              <label class="form-label">手機號碼 <span style="color:#C0392B">*</span></label>
+              <input type="tel" class="form-input" id="reg-phone" placeholder="09xxxxxxxx" maxlength="10">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email <span style="color:#C0392B">*</span></label>
+              <input type="email" class="form-input" id="reg-email" placeholder="example@gmail.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label">密碼（至少 6 個字元）<span style="color:#C0392B">*</span></label>
+              <input type="password" class="form-input" id="reg-pw" placeholder="請設定密碼">
+            </div>
+            <div class="form-group">
+              <label class="form-label">確認密碼 <span style="color:#C0392B">*</span></label>
+              <input type="password" class="form-input" id="reg-pw2" placeholder="再次輸入密碼"
+                onkeydown="if(event.key==='Enter')sendRegVerifyCode()">
+            </div>
+            <div id="reg-err" style="font-size:11px;color:#C0392B;margin:-8px 0 14px;min-height:16px;letter-spacing:0.5px"></div>
+            <button class="btn-login" id="reg-send-btn" onclick="sendRegVerifyCode()">取得驗證碼</button>
           </div>
-          <div class="form-group">
-            <label class="form-label">手機號碼</label>
-            <input type="tel" class="form-input" id="reg-phone" placeholder="09xxxxxxxx" maxlength="10">
+
+          <!-- Step 2: 輸入驗證碼 -->
+          <div id="reg-step2" style="display:none">
+            <p style="font-size:12px;color:#27ae60;margin-bottom:16px;line-height:1.8;letter-spacing:0.5px" id="reg-sent-msg"></p>
+            <div class="form-group">
+              <label class="form-label">Email 驗證碼（6位數）</label>
+              <input type="text" class="form-input" id="reg-verify-code" placeholder="請輸入收到的驗證碼"
+                maxlength="6" style="letter-spacing:4px;font-size:18px;text-align:center"
+                onkeydown="if(event.key==='Enter')doRegister()">
+            </div>
+            <div id="reg-err2" style="font-size:11px;color:#C0392B;margin:-8px 0 14px;min-height:16px;letter-spacing:0.5px"></div>
+            <button class="btn-login" onclick="doRegister()">完成註冊</button>
+            <p style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:12px;letter-spacing:0.5px">
+              沒收到？
+              <a href="javascript:void(0)" onclick="backToRegStep1()" style="color:var(--brand-red);text-decoration:none">重新寄送</a>
+            </p>
           </div>
-          <div class="form-group">
-            <label class="form-label">Email <span style="color:#C0392B">*</span></label>
-            <input type="email" class="form-input" id="reg-email" placeholder="example@gmail.com"
-              onkeydown="if(event.key==='Enter')doRegister()">
-          </div>
-          <div class="form-group">
-            <label class="form-label">密碼（至少 6 個字元）</label>
-            <input type="password" class="form-input" id="reg-pw" placeholder="請設定密碼">
-          </div>
-          <div class="form-group">
-            <label class="form-label">確認密碼</label>
-            <input type="password" class="form-input" id="reg-pw2" placeholder="再次輸入密碼"
-              onkeydown="if(event.key==='Enter')doRegister()">
-          </div>
-          <div id="reg-err" style="font-size:11px;color:#C0392B;margin:-8px 0 14px;min-height:16px;letter-spacing:0.5px"></div>
-          <button class="btn-login" onclick="doRegister()">立即註冊</button>
         </div>
       </div>
     </div>
@@ -7195,6 +7497,20 @@
           <div class="admin-card-title" style="margin-bottom:14px">內部備註</div>
           <textarea class="admin-input admin-textarea" id="md-note" rows="3" placeholder="例：認養紀錄、特殊需求…" style="width:100%;margin-bottom:12px"></textarea>
           <button class="admin-save-btn" onclick="saveMemberNote()">儲存備註</button>
+        </div>
+
+        <!-- 刪除會員 -->
+        <div class="member-detail-section" style="border-top:1px solid var(--border-color);padding-top:20px;margin-top:8px">
+          <div class="admin-card-title" style="margin-bottom:8px;color:#C0392B">危險區域</div>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;letter-spacing:0.5px;line-height:1.7">
+            刪除後將永久移除此會員的所有資料（含集點紀錄），<br>除非重新註冊否則無法恢復。
+          </p>
+          <button onclick="deleteMemberPermanent()"
+            style="width:100%;padding:11px;background:none;border:1px solid #C0392B;color:#C0392B;font-size:12px;letter-spacing:1.5px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all 0.2s"
+            onmouseover="this.style.background='#C0392B';this.style.color='#fff'"
+            onmouseout="this.style.background='none';this.style.color='#C0392B'">
+            永久刪除此會員
+          </button>
         </div>
 
       </div>
