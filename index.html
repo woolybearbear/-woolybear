@@ -2417,7 +2417,7 @@
     };
 
     // ── 訂單 Firebase 同步 ──
-    async function fbSaveOrder(order) {
+    async function window._fb && window._fb.setDoc('orders', order.id, order).catch(()=>{}) {
       if(!window._fb) return;
       try { await window._fb.setDoc(FB_COLS.orders, order.id, order); } catch(e) { console.warn('fbSaveOrder:', e); }
     }
@@ -2452,7 +2452,7 @@
     }
 
     // ── 集點 Firebase 同步 ──
-    async function fbSavePointLog(log) {
+    async function window._fb && window._fb.setDoc('points_log', log.id, log).catch(()=>{}) {
       if(!window._fb) return;
       try { await window._fb.setDoc(FB_COLS.points, log.id, log); } catch(e) { console.warn('fbSavePointLog:', e); }
     }
@@ -2468,7 +2468,7 @@
     }
 
     // ── 商品 Firebase 同步 ──
-    async function fbSaveProducts(prods) {
+    async function window._fb && window._fb.setDoc('products','all',{list:prods,updatedAt:Date.now()}).catch(()=>{}) {
       if(!window._fb) return;
       try { await window._fb.setDoc(FB_COLS.products, 'all', { list: prods, updatedAt: Date.now() }); } catch(e) { console.warn('fbSaveProducts:', e); }
     }
@@ -2654,7 +2654,7 @@
       members[idx].password = btoa(newpw);
       delete members[idx].tempPw;
       saveMembers(members);
-      if(window._fb) fbSaveMember(members[idx]).catch(()=>{});
+      if(window._fb) window._fb.setDoc('members', members[idx].id, members[idx]).catch(()=>{});
 
       // 清除驗證碼
       _verifyCode = null; _verifyEmail = null; _verifyExpiry = null;
@@ -2869,7 +2869,7 @@
           <div class="admin-nav-label">訂單 & 會員</div>
           <div class="admin-nav-item" onclick="switchAdminTab('orders',this)">訂單管理</div>
           <div class="admin-nav-item" onclick="switchAdminTab('members',this)">會員管理</div>
-          <div class="admin-nav-item" onclick="switchAdminTab('inquiries',this)">對帳紀錄</div>
+
 
           <!-- 商品 -->
           <div class="admin-nav-label">商品</div>
@@ -3222,17 +3222,7 @@
           </div>
         </div>
 
-        <!-- ── 對帳紀錄 ── -->
-        <div id="panel-inquiries" class="admin-panel">
-          <div class="admin-page-header"><h2 class="admin-page-title">客戶對帳紀錄</h2></div>
-          <div class="admin-card">
-            <div class="admin-card-title">近期匯款回報</div>
-            <table class="admin-table">
-              <thead><tr><th>日期</th><th>客戶</th><th>項目</th><th>末五碼</th><th>狀態</th></tr></thead>
-              <tbody><tr><td>2026.07.01</td><td>陳先生</td><td>卷毛肉桂波妹妹</td><td>84721</td><td><span class="status-pill pill-active">待查帳</span></td></tr></tbody>
-            </table>
-          </div>
-        </div>
+        
 
       </main>
     </div>
@@ -4553,7 +4543,7 @@
       if(!confirm('確定刪除？'))return;
       const id=document.getElementById('product-edit-id').value;
       const prods=getProds().filter(p=>p.id!==id); dbSet(DB.products,prods);
-      if(window._fb) fbSaveProducts(prods).catch(()=>{});
+      if(window._fb) window._fb && window._fb.setDoc('products','all',{list:prods,updatedAt:Date.now()}).catch(()=>{}).catch(()=>{});
       renderProdTable(); if(_currentPage==='products')renderPage('products');
       closeEditModal('productModal'); showToast('商品已刪除');
     }
@@ -4897,11 +4887,11 @@
     function getPointsLog() { try { return JSON.parse(localStorage.getItem(DB_POINTS_LOG))|| []; } catch(e) { return []; } }
     function saveMembers(m) {
       localStorage.setItem(DB_MEMBERS, JSON.stringify(m));
-      if(window._fb) { m.forEach(member => fbSaveMember(member).catch(()=>{})); }
+      if(window._fb) { m.forEach(member => window._fb && window._fb.setDoc('members', member.id, member).catch(()=>{}).catch(()=>{})); }
     }
     function savePointsLog(l) {
       localStorage.setItem(DB_POINTS_LOG, JSON.stringify(l));
-      if(window._fb) { l.forEach(log => fbSavePointLog(log).catch(()=>{})); }
+      if(window._fb) { l.forEach(log => window._fb && window._fb.setDoc('points_log', log.id, log).catch(()=>{}).catch(()=>{})); }
     }
 
     // 目前登入的會員
@@ -4990,8 +4980,12 @@
       let loginPw, loginPwAlt;
       try { loginPw = btoa(unescape(encodeURIComponent(pw))); } catch(e) { loginPw = btoa(pw); }
       try { loginPwAlt = btoa(pw); } catch(e) { loginPwAlt = loginPw; }
-      if(!found || (found.password !== loginPw && found.password !== loginPwAlt)) {
-        setErr('手機號碼或密碼錯誤');
+      if(!found) {
+        setErr('此手機號碼尚未註冊');
+        return;
+      }
+      if(found.password !== loginPw && found.password !== loginPwAlt) {
+        setErr('密碼錯誤，請再試一次');
         return;
       }
       sessionSave(found);
@@ -5081,7 +5075,7 @@
         const newMember = { id:'mb'+Date.now(), name, phone, email, password:encodedPw, joinedAt:Date.now(), note:'' };
         members.push(newMember);
         saveMembers(members);
-        if(window._fb) fbSaveMember(newMember).catch(()=>{});
+        if(window._fb) window._fb.setDoc('members', newMember.id, newMember).catch(()=>{});
         sessionSave(newMember);
 
         // 清除驗證碼
@@ -5296,7 +5290,7 @@
 
     // ── 後台：新增會員 ──
     function openAddMemberModal() {
-      ['admin-add-name','admin-add-phone','admin-add-pw','admin-add-note'].forEach(id=>{
+      ['admin-add-name','admin-add-phone','admin-add-email','admin-add-pw','admin-add-note'].forEach(id=>{
         const el=document.getElementById(id); if(el) el.value='';
       });
       const err=document.getElementById('admin-add-err'); if(err) err.textContent='';
@@ -5305,6 +5299,7 @@
     function doAdminAddMember() {
       const name  = document.getElementById('admin-add-name').value.trim();
       const phone = document.getElementById('admin-add-phone').value.trim();
+      const email = (document.getElementById('admin-add-email')?.value||'').trim();
       const pw    = document.getElementById('admin-add-pw').value;
       const note  = document.getElementById('admin-add-note').value.trim();
       const err   = document.getElementById('admin-add-err');
@@ -5312,7 +5307,8 @@
       if(!/^09\d{8}$/.test(phone)){ err.textContent='手機號碼格式不正確'; return; }
       const members=getMembers();
       if(members.find(m=>m.phone===phone)){ err.textContent='此手機號碼已存在'; return; }
-      members.push({ id:'mb'+Date.now(), name, phone, password:btoa(pw), joinedAt:Date.now(), note });
+      let encodedPw; try{ encodedPw=btoa(unescape(encodeURIComponent(pw))); }catch(e){ encodedPw=btoa(pw); }
+      members.push({ id:'mb'+Date.now(), name, phone, email, password:encodedPw, joinedAt:Date.now(), note });
       saveMembers(members);
       closeEditModal('addMemberModal');
       renderMemberAdminPanel();
@@ -5415,7 +5411,7 @@
       if(idx<0) return;
       members[idx].note = note;
       saveMembers(members);
-      if(window._fb) fbSaveMember(members[idx]).catch(()=>{});
+      if(window._fb) window._fb.setDoc('members', members[idx].id, members[idx]).catch(()=>{});
       showToast('備註已儲存');
     }
 
@@ -5514,7 +5510,7 @@
       localStorage.setItem(DB_ORDERS, JSON.stringify(o));
       // Firebase 同步（非同步，不阻塞）
       if(window._fb) {
-        o.forEach(order => fbSaveOrder(order).catch(()=>{}));
+        o.forEach(order => window._fb && window._fb.setDoc('orders', order.id, order).catch(()=>{}).catch(()=>{}));
       }
     };
 
@@ -7208,9 +7204,243 @@
       });
       if(changed) {
         localStorage.setItem(DB.products, JSON.stringify(prods));
-        if(window._fb) fbSaveProducts(prods).catch(()=>{});
+        if(window._fb) window._fb && window._fb.setDoc('products','all',{list:prods,updatedAt:Date.now()}).catch(()=>{}).catch(()=>{});
       }
     }
+
+
+    // ── 永久刪除會員 ──
+    
+    function sendOrderEmail(order) {
+      if(typeof emailjs === 'undefined') return;
+      try {
+        const productStr = order.cartItems
+          ? order.cartItems.map(i => i.name + (i.variant?'/'+i.variant:'') + (i.qty>1?' x'+i.qty:'')).join(', ')
+          : (order.productName||'') + (order.variant?'/'+order.variant:'') + (order.qty>1?' x'+order.qty:'');
+        const d = new Date(order.createdAt);
+        const ts = d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate()+' '+
+          ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+        emailjs.send('service_mv97yvi', 'template_teqdryo', {
+          order_id: order.id, order_time: ts, product: productStr,
+          subtotal: order.subtotal||order.total||0,
+          shipping: order.shipping!=null?order.shipping:38,
+          total: order.total||order.subtotal||0,
+          customer_name: order.name||'',
+          customer_phone: order.phone||'',
+          store_id: order.store||'', note: order.note||'無'
+        }).catch(e => console.warn('Email failed', e));
+      } catch(e) { console.warn(e); }
+    }
+
+
+
+    // ── 從 module 移到 main script（確保 onclick 可呼叫）──
+
+    function deleteMemberPermanent() {
+      if(!_detailMemberId) return;
+      const members = getMembers();
+      const m = members.find(x => x.id === _detailMemberId);
+      if(!m) return;
+      if(!confirm('確定要永久刪除會員「' + m.name + '」？\n此動作無法還原，所有資料將一併刪除。')) return;
+
+      // 刪除會員
+      const newMembers = members.filter(x => x.id !== _detailMemberId);
+      saveMembers(newMembers);
+      if(window._fb) window._fb.deleteDoc('members', _detailMemberId).catch(()=>{});
+
+      // 刪除集點紀錄
+      const newLog = getPointsLog().filter(l => l.memberId !== _detailMemberId);
+      savePointsLog(newLog);
+      if(window._fb) {
+        newLog.forEach(l => {
+          if(l.memberId === _detailMemberId)
+            window._fb.deleteDoc('points_log', l.id).catch(()=>{});
+        });
+      }
+
+      closeEditModal('memberDetailModal');
+      renderMemberAdminPanel();
+      showToast('會員「' + m.name + '」已永久刪除');
+    }
+
+    function deleteMember() {
+      if(!_detailMemberId) return;
+      const members = getMembers();
+      const m = members.find(x => x.id === _detailMemberId);
+      if(!m) return;
+      if(!confirm('確定要永久刪除會員「' + m.name + '」？\n此動作無法還原，該會員的所有集點紀錄也將一併刪除。')) return;
+
+      // 刪除會員
+      const newMembers = members.filter(x => x.id !== _detailMemberId);
+      saveMembers(newMembers);
+      if(window._fb) window._fb.deleteDoc('members', _detailMemberId).catch(()=>{});
+
+      // 刪除集點紀錄
+      const logs = getPointsLog().filter(l => l.memberId !== _detailMemberId);
+      savePointsLog(logs);
+      if(window._fb) {
+        getPointsLog().filter(l => l.memberId === _detailMemberId)
+          .forEach(l => window._fb.deleteDoc('points_log', l.id).catch(()=>{}));
+      }
+
+      closeEditModal('memberDetailModal');
+      renderMemberAdminPanel();
+      showToast('會員「' + m.name + '」已永久刪除');
+    }
+
+
+    // ── 永久刪除會員 ──
+
+    function sendVerifyCode() {
+      const email = (document.getElementById('forget-email')?.value || '').trim();
+      const err   = document.getElementById('forget-err1');
+      if(err) err.textContent = '';
+
+      if(!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) {
+        if(err) err.textContent = '請輸入正確的 Email 格式';
+        return;
+      }
+      const members = getMembers();
+      const member  = members.find(m => m.email === email);
+      if(!member) {
+        if(err) err.textContent = '找不到此 Email 對應的帳號';
+        return;
+      }
+
+      // 產生 6 位數驗證碼
+      _verifyCode   = Math.floor(100000 + Math.random() * 900000).toString();
+      _verifyEmail  = email;
+      _verifyExpiry = Date.now() + 10 * 60 * 1000; // 10 分鐘
+
+      // 按鈕 Loading 狀態
+      const btn = document.getElementById('forget-send-btn');
+      if(btn) { btn.textContent = '寄送中...'; btn.disabled = true; }
+
+      if(typeof emailjs === 'undefined') {
+        if(err) err.textContent = '郵件系統載入中，請稍後再試';
+        if(btn) { btn.textContent = '寄送驗證碼'; btn.disabled = false; }
+        return;
+      }
+
+      emailjs.send('service_mv97yvi', 'template_n4kcn2x', {
+        customer_name:  member.name,
+        customer_email: email,
+        verify_code:    _verifyCode
+      }).then(() => {
+        // 切換到 Step 2
+        document.getElementById('forget-step1').style.display = 'none';
+        document.getElementById('forget-step2').style.display = 'block';
+        const msg = document.getElementById('forget-sent-msg');
+        if(msg) msg.textContent = '驗證碼已寄到 ' + email + '，10 分鐘內有效';
+        if(btn) { btn.textContent = '寄送驗證碼'; btn.disabled = false; }
+      }).catch(e => {
+        if(err) err.textContent = '寄信失敗，請稍後再試';
+        if(btn) { btn.textContent = '寄送驗證碼'; btn.disabled = false; }
+      });
+    }
+
+    function doResetPassword() {
+      const code  = (document.getElementById('forget-code')?.value  || '').trim();
+      const newpw = (document.getElementById('forget-newpw')?.value || '');
+      const newpw2= (document.getElementById('forget-newpw2')?.value|| '');
+      const err   = document.getElementById('forget-err2');
+      if(err) err.textContent = '';
+
+      // 驗證碼檢查
+      if(!_verifyCode || !_verifyEmail) {
+        if(err) err.textContent = '驗證碼已失效，請重新申請';
+        return;
+      }
+      if(Date.now() > _verifyExpiry) {
+        if(err) err.textContent = '驗證碼已過期（10分鐘），請重新申請';
+        backToForgetStep1();
+        return;
+      }
+      if(code !== _verifyCode) {
+        if(err) err.textContent = '驗證碼錯誤，請再次確認';
+        return;
+      }
+      if(newpw.length < 6) {
+        if(err) err.textContent = '新密碼至少 6 個字元';
+        return;
+      }
+      if(newpw !== newpw2) {
+        if(err) err.textContent = '兩次密碼不一致';
+        return;
+      }
+
+      // 更新密碼
+      const members = getMembers();
+      const idx     = members.findIndex(m => m.email === _verifyEmail);
+      if(idx < 0) { if(err) err.textContent = '帳號錯誤，請重新申請'; return; }
+      members[idx].password = btoa(newpw);
+      delete members[idx].tempPw;
+      saveMembers(members);
+      if(window._fb) window._fb.setDoc('members', members[idx].id, members[idx]).catch(()=>{});
+
+      // 清除驗證碼
+      _verifyCode = null; _verifyEmail = null; _verifyExpiry = null;
+
+      // 返回登入
+      switchAuthTab('login');
+      showToast('密碼已重設成功，請重新登入！');
+    }
+
+    function backToForgetStep1() {
+      _verifyCode = null; _verifyEmail = null; _verifyExpiry = null;
+      document.getElementById('forget-step1').style.display = 'block';
+      document.getElementById('forget-step2').style.display = 'none';
+      const fe = document.getElementById('forget-email');
+      if(fe) fe.value = '';
+      const err = document.getElementById('forget-err1');
+      if(err) err.textContent = '';
+    }
+
+
+    // ── 我的訂單渲染 ──
+
+    function renderMyOrders() {
+      const el = document.getElementById('my-orders-list');
+      if(!el || !_currentMember) return;
+      const allOrders = getOrders();
+      const myOrders  = allOrders.filter(o => o.memberId === _currentMember.id)
+                                  .sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+      if(!myOrders.length) {
+        el.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text-muted);font-size:13px;letter-spacing:1px">尚無訂單紀錄</div>';
+        return;
+      }
+      el.innerHTML = myOrders.map(function(o) {
+        var statusInfo = ORDER_STATUS[o.status] || {label: o.status, color: '#999'};
+        var d = new Date(o.createdAt);
+        var dateStr = d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate();
+        var productStr = o.cartItems
+          ? o.cartItems.map(function(i){ return i.name + (i.qty>1?' x'+i.qty:''); }).join('、')
+          : (o.productName||'') + (o.qty>1?' x'+o.qty:'');
+        var tracking = o.trackingNum
+          ? '<div style="font-size:11px;color:#27ae60;margin-top:6px">交貨便代碼：' + o.trackingNum + '</div>'
+          : '';
+        return (
+          '<div style="border:1px solid var(--border-color);margin-bottom:12px;background:#fff">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #f5f5f5;background:var(--brand-cream,#FAF7F2);flex-wrap:wrap;gap:6px">' +
+              '<div style="font-family:monospace;font-size:12px;color:var(--brand-red);font-weight:600">' + o.id + '</div>' +
+              '<div style="font-size:11px;color:var(--text-muted)">' + dateStr + '</div>' +
+              '<div style="font-size:11px;padding:3px 10px;border-radius:20px;background:' + statusInfo.color + '18;color:' + statusInfo.color + ';border:1px solid ' + statusInfo.color + '40">' + statusInfo.label + '</div>' +
+            '</div>' +
+            '<div style="padding:12px 14px">' +
+              '<div style="font-size:13px;color:var(--text-main);margin-bottom:6px">' + productStr + '</div>' +
+              '<div style="display:flex;justify-content:space-between;align-items:center">' +
+                '<div style="font-size:12px;color:var(--text-muted)">取件門市：' + (o.store||'—') + '</div>' +
+                '<div style="font-size:14px;font-weight:500;color:var(--brand-red)">NT$ ' + (o.total||o.subtotal||0) + '</div>' +
+              '</div>' +
+              tracking +
+            '</div>' +
+          '</div>'
+        );
+      }).join('');
+    }
+
+
+    // ── 後台：永久刪除會員 ──
 
   </script>
 
@@ -7343,6 +7573,7 @@
               沒收到？
               <a href="javascript:void(0)" onclick="backToForgetStep1()" style="color:var(--brand-red);text-decoration:none">重新寄送</a>
             </p>
+            <p style="font-size:10px;color:#bbb;text-align:center;margin-top:6px;letter-spacing:0.5px;line-height:1.6">找不到驗證碼？請留意是否被歸類至<strong>垃圾郵件</strong></p>
           </div>
 
           <p style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:16px;letter-spacing:0.5px">
@@ -7394,6 +7625,7 @@
               沒收到？
               <a href="javascript:void(0)" onclick="backToRegStep1()" style="color:var(--brand-red);text-decoration:none">重新寄送</a>
             </p>
+            <p style="font-size:10px;color:#bbb;text-align:center;margin-top:6px;letter-spacing:0.5px;line-height:1.6">找不到驗證碼？請留意是否被歸類至<strong>垃圾郵件</strong></p>
           </div>
         </div>
       </div>
@@ -7413,6 +7645,7 @@
         <div class="edit-form-2col">
           <div class="admin-field"><label class="admin-label">姓名</label><input class="admin-input" id="admin-add-name" type="text" placeholder="會員姓名"></div>
           <div class="admin-field"><label class="admin-label">手機號碼</label><input class="admin-input" id="admin-add-phone" type="tel" placeholder="09xxxxxxxx" maxlength="10"></div>
+          <div class="admin-field" style="grid-column:1/-1"><label class="admin-label">Email（用於驗證碼及密碼重設）</label><input class="admin-input" id="admin-add-email" type="email" placeholder="example@gmail.com"></div>
           <div class="admin-field" style="grid-column:1/-1"><label class="admin-label">預設密碼</label><input class="admin-input" id="admin-add-pw" type="text" placeholder="設定初始密碼（告知會員後請提醒修改）"></div>
           <div class="admin-field" style="grid-column:1/-1"><label class="admin-label">備註（選填）</label><textarea class="admin-input admin-textarea" id="admin-add-note" rows="2" placeholder="例：2026.07 認養波妹妹"></textarea></div>
         </div>
